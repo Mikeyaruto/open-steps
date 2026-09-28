@@ -1,9 +1,13 @@
 # Running the pack on Codex, Cursor and Gemini CLI
 
-Claude Code is what the pack is built and measured on. Everything here is the
-second-best case: the skills carry over cleanly, the routing block carries over
-cleanly, the hooks carry over on all three, unchanged on Codex and through
-one adapter on Cursor and Gemini CLI.
+Claude Code is what the pack is built and measured on. This page is the
+second-best case: the skills install from one shared folder, the routing block
+goes into each tool's own instructions file, and the hooks carry over through
+one adapter on Cursor CLI and Gemini CLI, where a contributor ran them live on
+Windows 11 (the maintainer has not reproduced those runs). On Codex the same
+two scripts are wired unchanged, per Codex's documented hook contract; they
+were checked against Codex-shaped input by hand, and Codex running them in a
+live session has not been watched yet.
 
 What was run is marked as run. Everything else comes from a vendor's
 documentation and is called out where it matters. Same rule the skills follow.
@@ -23,20 +27,22 @@ Copies, so run it again after a `git pull` to update.
 
 One skill carries over worse than the rest. `os-what-could-go-wrong` inlines
 its analysis prompt with a `!` command and hands the attack to a fresh
-subagent, and both are Claude Code behaviours. Measured on Codex CLI 0.151.0,
-four runs with a real decision brief. The `!` line arrives as literal text and
-the skill's own fallback works: Codex reads
-`references/premortem-prompt.md` next to it. No fresh agent is dispatched. All
-four runs called the review independent anyway, one wrote the whole report
-twice, and one skipped a step the others took.
+subagent, and both are Claude Code behaviours. Measured on Codex CLI 0.151.0
+on Linux, four runs with a real decision brief. The `!` line arrived as
+literal text and the skill's own fallback worked: Codex read
+`references/premortem-prompt.md` next to it. No fresh agent was dispatched.
+All four runs called the review independent anyway, one wrote the whole report
+twice, and one skipped a step the others took. That check came before the
+skill's last two changes (7c87cdb, a61b0d6), and has not been re-run since.
 
-A fresh process is reachable, but not on defaults. A nested `codex exec` fails
-to initialize inside the sandbox; the session reports that the dispatch failed
-and calls the review independent in the same sentence. With approvals and the
-sandbox bypassed it starts, about three minutes, with its own session id. What
-went out was the brief plus an instruction to run the skill rather than the
-four things step 2 names, so the fresh session loaded the skill and ran the
-whole thing again, and the report appeared four times in one transcript.
+In the same Codex CLI 0.151 check, a fresh process was reachable, but not on
+defaults. A nested `codex exec` failed to initialize inside the sandbox; the
+session reported that the dispatch failed and called the review independent in
+the same sentence. With approvals and the sandbox bypassed it started, in about
+three minutes, with its own session id. What went out was the brief plus an
+instruction to run the skill rather than the four things the skill's step 2
+named then, so the fresh session loaded the skill and ran the whole thing
+again, and the report appeared four times in one transcript.
 
 Linking instead works and updates itself, but it renames the skills. Codex
 resolves a symlink back to the clone and takes the namespace from the folder
@@ -52,9 +58,12 @@ folder is the one that was run.
 
 ## The routing block
 
-The block in [`routing-block.md`](routing-block.md) does the same job here as
-in `CLAUDE.md`: it turns the moments it names into an obligation rather than a
-hint. Skills are model-invoked everywhere, so this matters everywhere.
+The block in [`routing-block.md`](routing-block.md) is meant to do the same job
+here as in `CLAUDE.md`: turn the moments it names into an obligation rather
+than a hint. Skills are model-invoked in each of these tools, so it is worth
+adding. Whether it steers a skill outside Claude Code has not been seen yet: on
+Gemini CLI it was in place during the contributor's live run, and the Codex
+and Cursor paths below come from those tools' documentation.
 
 One command per tool, from the folder holding the clone, safe to re-run:
 
@@ -78,17 +87,20 @@ they return.
 | Tool | Session start | Stop |
 |---|---|---|
 | Claude Code | works, wired by the plugin | works, wired by the plugin |
-| Codex | works, script unchanged | works, script unchanged |
-| Cursor | works, through the adapter | asks, cannot insist: a follow-up message, through the adapter; interactive sessions only, headless never reaches it |
+| Codex | checked by hand on Codex-shaped input; a live session not watched | checked by hand on Codex-shaped input; a live session not watched |
+| Cursor CLI | works, through the adapter | asks, cannot insist: a follow-up message, through the adapter; seen in an interactive session; the headless runs tried did not reach it |
 | Gemini CLI | works, through the adapter | works, through the adapter, on `AfterAgent`, where a stop can refuse |
 
 ### Codex
 
 Codex takes a `session_start` command hook's plain stdout as additional
 context, and treats exit code 2 from a `stop` hook as "blocked", with stderr as
-the reason. That is the same contract Claude Code uses, so both scripts run
-unmodified. Only the wiring changes: Codex configures hooks in TOML, and there
-is no `${CLAUDE_PLUGIN_ROOT}` outside a plugin, so the paths are absolute.
+the reason. That is the same contract Claude Code uses, so per that
+documentation both scripts should run unmodified. They were checked against
+Codex-shaped input by hand; Codex running them in a live session has not been
+watched yet. The wiring is what changes: Codex configures hooks in TOML, and
+there is no `${CLAUDE_PLUGIN_ROOT}` outside a plugin, so the paths are
+absolute.
 
 Add to `~/.codex/config.toml`, replacing the path with your clone:
 
@@ -108,12 +120,12 @@ timeout_sec = 10
 
 `codex doctor` reports `config.toml parse ok` when the shape is right.
 
-Then trust them, and this part is not optional. Codex reviews newly added hooks
-at startup and offers to trust them or to continue without trusting. A hook
-that is not trusted still runs, but loses its control effects, which is exactly
-the half that matters here: the stop hook's exit code 2 stops blocking and the
-report is never asked for, quietly. If reports never appear, this is the first
-thing to check.
+Then trust them. This part comes from Codex's hook documentation and has not
+been watched: Codex reviews newly added hooks at startup and offers to trust
+them or to continue without trusting. A hook that is not trusted still runs,
+but loses its control effects, which is exactly the half that matters here:
+the stop hook's exit code 2 stops blocking and the report is not asked for,
+quietly. If reports do not appear, this is the first thing to check.
 
 The same environment variables apply, because they are read by the scripts
 rather than by any tool: `OPEN_STEPS_COOLDOWN`, `OPEN_STEPS_MIN_FILES`,
@@ -122,10 +134,11 @@ rather than by any tool: `OPEN_STEPS_COOLDOWN`, `OPEN_STEPS_MIN_FILES`,
 
 ### Cursor
 
-Run on Cursor CLI, on Windows, in an interactive session; the details are
-under "What was actually run". The desktop app and the other platforms are
-read from Cursor's documentation, and headless runs of the CLI never reach
-the stop hook, as below.
+Run by a contributor on Cursor CLI, on Windows 11, in an interactive session;
+the maintainer has not reproduced it, and the details are under "What was
+actually run". The desktop app and the other platforms are
+read from Cursor's documentation. In the headless runs tried (`agent -p`, and
+a prompt piped through stdin), the CLI did not reach the stop hook, as below.
 
 Cursor has the two events, `sessionStart` and `stop`, and reads JSON on stdin
 like the others, but it answers only to JSON on stdout: plain text counts as a
@@ -193,11 +206,12 @@ carrying the exit code; that is where to look first if nothing seems to
 happen. The desktop app has a Hooks output channel and a Hooks page under
 Customize for the same purpose, per its documentation.
 
-**What happens when the agent ignores the follow-up.** On Claude Code and
-Codex the report is required: the stop is refused until it exists. Here it is
-asked for. Cursor submits the request as the next message and the agent
-normally writes the report, which lands outside the repository and so leaves
-the fingerprint alone; the next stop is silent. If the agent stops again
+**What happens when the agent ignores the follow-up.** On Claude Code the
+report is required: the stop is refused until it exists. On Codex it should be
+too once the hooks are trusted, per Codex's documentation; that has not been
+watched. On Cursor CLI it is asked for: Cursor CLI submits the request as the
+next message, and in the contributor's run the agent wrote the report, which
+lands outside the repository and so leaves the fingerprint alone; the next stop is silent. If the agent stops again
 without writing it, nothing forces the matter. The stop script records the
 fingerprint when it asks, so the same change is never asked about twice: the
 hook stays silent until new work lands, and the cooldown
@@ -217,8 +231,9 @@ and other configs" setting.
 
 ### Gemini CLI
 
-Run on Gemini CLI 0.58.0 on Windows 11, interactive and headless; what was
-watched is under "What was actually run" below. The rest of this section is
+Run by a contributor on Gemini CLI 0.58.0 on Windows 11, interactive and
+headless; the maintainer has not reproduced it, and what was watched is under
+"What was actually run" below. The rest of this section is
 its documentation and its source, and says so where it matters.
 
 Hooks live in `settings.json`, user-level `~/.gemini/settings.json` or
@@ -283,7 +298,7 @@ after it too. The CLI has no cap of its own on denies beyond its turn budget
 (read in its source, not tested to the limit); the stop script's own state is
 what keeps it to one request per landed change, the same as everywhere else.
 
-The one thing to know before wiring it: the reports folder,
+One thing to know before wiring it: the reports folder,
 `~/.claude/open-steps/reports/`, is outside Gemini's workspace, and Gemini's
 file tools refuse to write outside the workspace directories while its shell
 tool does not. Which one the agent reaches for is the model's choice. In the
@@ -332,8 +347,9 @@ On Codex CLI 0.145, in a throwaway home directory:
 codex debug prompt-input | grep -o 'os-[a-z-]*' | sort -u
 ```
 
-lists all six skill names, reaching the model with their descriptions intact.
-This is also where the symlink naming difference above turned up.
+listed all six skills the pack had then (2026-08-25), reaching the model with
+their descriptions intact; this is also where the symlink naming difference
+above turned up. It has not been re-run since.
 
 Both hooks were then fed a Codex-shaped payload directly:
 
@@ -347,8 +363,11 @@ The second one needs an uncommitted change in the repository to have anything
 to report. `hooks/test.sh` covers this shape as CASE 9, so it stays covered.
 
 Not run: hooks firing inside a live Codex session, which needs a real turn
-rather than a rendered prompt. The trust step above is read from how Codex
-implements hooks, not from watching it happen.
+rather than a rendered prompt. The trust step above is read from Codex's hook
+documentation, not from watching it happen.
+
+The Cursor CLI and Gemini CLI runs below are one contributor's; the maintainer
+has not reproduced them.
 
 On Cursor CLI 2026.09.02 on Windows 11, with the skills copied to
 `~/.agents/skills/` and the adapter wired in `~/.cursor/hooks.json` as above,
@@ -423,11 +442,21 @@ individual accounts on this version at the time.
 
 ## What does not come across
 
-- **Activation is measured on Claude models only.** The figures in the README
-  say nothing about how reliably these skills switch on inside another tool.
-  No figure is quoted for those because none was measured.
-- **`allowed-tools:` is Claude Code's field.** Other tools ignore it and ask
-  for permission the way they normally do. Safer, just chattier.
-- **Reports still land in `~/.claude/open-steps/reports/<project>/`.** The name
-  says Claude; it is only a path, and one folder means every tool reads the
-  same history.
+- **Activation is measured on Claude Code with Claude models so far.** The
+  figures in the README say nothing about how reliably these skills switch on
+  inside another tool. No figure is quoted for those because none was
+  measured. Runners for Codex, Cursor and Gemini CLI are open issues: #39
+  Codex, #40 Cursor, #38 Gemini CLI.
+- **Codex may shorten the descriptions.** Per Codex's skills documentation
+  (https://developers.openai.com/codex/skills/, read 2026-09-27), the
+  skills catalog gets at most 2% of the context window (8,000 characters when
+  the window size is unknown), and descriptions are shortened first when many
+  skills are installed. So on Codex, activation may drop when many other
+  skills sit next to these; not measured.
+- **`allowed-tools:` is Claude Code's field.** Per their documentation, Codex,
+  Cursor and Gemini CLI ignore the field and ask the way they normally do; not
+  tested.
+- **Reports land in `~/.claude/open-steps/reports/<project>/`.** The folder
+  name says Claude, but it is only a path, and each tool is pointed at it so
+  they share one history. On Gemini CLI the report has to be saved with the
+  shell tool; a headless run was seen writing it elsewhere.

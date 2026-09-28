@@ -2,7 +2,7 @@
 
 # Open Steps
 
-*Traducción del README en inglés del 12 de septiembre de 2026. Las cifras de las mediciones, el funcionamiento interno y las notas para contribuidores están en el [README en inglés](README.md): allí cambian cada semana. Aquí está lo que cambia poco. Traducción hecha con ayuda de IA; todavía no la ha revisado un hablante nativo. Si ve un error, corríjalo con un pull request.*
+*Traducción del README en inglés del 12 de septiembre de 2026. Las cifras de las mediciones, el funcionamiento interno y las notas para contribuidores están en el [README en inglés](README.md): allí cambian cada semana. Aquí está lo que cambia poco. Traducción hecha con ayuda de IA; todavía no la ha revisado un hablante nativo. Si ve un error, corríjalo con un pull request. La instalación en Codex, Cursor y Gemini CLI se describe en el Quick start del [README en inglés](README.md#other-agents-codex-cursor-gemini-cli).*
 
 **Habilidades que mantienen el desarrollo abierto para la persona que lo dirige: las sesiones, las decisiones, los siguientes pasos, el panorama completo, todo en lenguaje claro.**
 
@@ -31,13 +31,15 @@ El agente responde en el idioma en que usted le habla. El código, los nombres d
 
 ## Instalación
 
-El paquete está hecho y medido en Claude Code; ahí todo funciona sin pasos extra. Las habilidades también se instalan en Codex, Cursor y Gemini CLI, vea [otros agentes](docs/other-agents.md) (en inglés).
+El paquete está hecho y medido en Claude Code; ahí un plugin conecta las habilidades y los dos hooks con un comando. Las habilidades también se instalan en Codex, Cursor y Gemini CLI: un comando de copia las instala, y los hooks piden unas pocas líneas de configuración en cada herramienta, vea [otros agentes](docs/other-agents.md) (en inglés).
 
 Descargue el repositorio:
 
 ```bash
 git clone https://github.com/kharmanskyi/open-steps.git
 ```
+
+### Claude Code
 
 Los dos comandos siguientes se ejecutan desde la carpeta donde lo descargó, la que ahora contiene `open-steps/`, no desde dentro de ella. Instálelo como plugin:
 
@@ -61,8 +63,10 @@ Más adelante, para revisar toda la instalación y no solo el plugin, escriba `/
 
 ## Actualizar y quitar
 
-Para actualizar: `git pull` dentro de `open-steps/`, luego `claude plugin update open-steps@open-steps`. Hacen falta las dos mitades: el plugin se actualiza desde su carpeta, no desde GitHub, y los archivos llegan a la copia instalada solo cuando cambia el número de versión. Para quitarlo: `claude plugin uninstall open-steps`, y luego borre el bloque de su `CLAUDE.md`.
+**Claude Code.** Para actualizar: `git pull` dentro de `open-steps/`, luego `claude plugin update open-steps@open-steps`. Hacen falta las dos mitades: el plugin se actualiza desde su carpeta, no desde GitHub, y los archivos llegan a la copia instalada solo cuando cambia el número de versión. Para quitarlo: `claude plugin uninstall open-steps`, y luego borre el bloque de su `CLAUDE.md`.
 
 ## Licencia
 
 MIT. El paquete es público y las contribuciones son bienvenidas: las reglas están en [CONTRIBUTING.md](CONTRIBUTING.md) (en inglés).
+
+Open Steps is an independent open-source project, not affiliated with or endorsed by the makers of the tools it runs on. Claude and Claude Code are trademarks of Anthropic. All other trademarks, including Codex, Cursor and Gemini, are the property of their respective owners.

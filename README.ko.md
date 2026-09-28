@@ -2,7 +2,7 @@
 
 # Open Steps
 
-*2026년 9월 12일 기준 영어 README를 옮긴 것입니다. 측정 수치, 내부 구조, 기여자 안내는 [영어 README](README.md)에 있습니다. 그쪽은 매주 바뀌고, 이 페이지에는 잘 바뀌지 않는 내용만 담았습니다. AI의 도움을 받아 옮겼고, 아직 한국어 원어민이 검토하지 않았습니다. 틀린 곳이 보이면 pull request로 고쳐 주세요.*
+*2026년 9월 12일 기준 영어 README를 옮긴 것입니다. 측정 수치, 내부 구조, 기여자 안내는 [영어 README](README.md)에 있습니다. 그쪽은 매주 바뀌고, 이 페이지에는 잘 바뀌지 않는 내용만 담았습니다. AI의 도움을 받아 옮겼고, 아직 한국어 원어민이 검토하지 않았습니다. 틀린 곳이 보이면 pull request로 고쳐 주세요. Codex, Cursor, Gemini CLI 설치 방법은 [영어 README](README.md#other-agents-codex-cursor-gemini-cli)의 Quick start에 있습니다.*
 
 **개발을 이끄는 사람이 개발 과정을 계속 볼 수 있게 해 주는 스킬 모음입니다. 세션, 결정, 다음 단계, 전체 그림, 모두 쉬운 말로.**
 
@@ -31,13 +31,15 @@
 
 ## 설치
 
-이 팩은 Claude Code에서 만들고 측정했습니다. 거기서는 추가 단계 없이 모두 동작합니다. 스킬은 Codex, Cursor, Gemini CLI에도 설치됩니다. [다른 에이전트](docs/other-agents.md)를 보세요 (영어).
+이 팩은 Claude Code에서 만들고 측정했습니다. Claude Code에서는 플러그인이 명령 한 번으로 스킬과 두 훅을 연결합니다. 스킬은 Codex, Cursor, Gemini CLI에도 설치됩니다. 복사 명령 하나로 스킬이 설치되고, 훅은 도구마다 설정 몇 줄이 필요합니다. [다른 에이전트](docs/other-agents.md)를 보세요 (영어).
 
 저장소를 내려받습니다:
 
 ```bash
 git clone https://github.com/kharmanskyi/open-steps.git
 ```
+
+### Claude Code
 
 아래 두 명령은 내려받은 폴더, 즉 이제 `open-steps/`가 들어 있는 폴더에서 실행합니다. 그 안에서 실행하지 않습니다. 플러그인으로 설치합니다:
 
@@ -61,8 +63,10 @@ grep -q 'os-done-or-not' ~/.claude/CLAUDE.md 2>/dev/null || cat open-steps/docs/
 
 ## 업데이트와 제거
 
-업데이트: `open-steps/` 안에서 `git pull`, 그다음 `claude plugin update open-steps@open-steps`. 둘 다 필요합니다. 플러그인은 GitHub가 아니라 당신의 폴더에서 업데이트되고, 파일은 버전 번호가 바뀔 때만 설치된 복사본으로 옮겨집니다. 제거: `claude plugin uninstall open-steps`, 그다음 `CLAUDE.md`에서 블록을 지웁니다.
+**Claude Code.** 업데이트: `open-steps/` 안에서 `git pull`, 그다음 `claude plugin update open-steps@open-steps`. 둘 다 필요합니다. 플러그인은 GitHub가 아니라 당신의 폴더에서 업데이트되고, 파일은 버전 번호가 바뀔 때만 설치된 복사본으로 옮겨집니다. 제거: `claude plugin uninstall open-steps`, 그다음 `CLAUDE.md`에서 블록을 지웁니다.
 
 ## 라이선스
 
 MIT. 공개 팩이고 기여를 환영합니다. 규칙은 [CONTRIBUTING.md](CONTRIBUTING.md)에 있습니다 (영어).
+
+Open Steps is an independent open-source project, not affiliated with or endorsed by the makers of the tools it runs on. Claude and Claude Code are trademarks of Anthropic. All other trademarks, including Codex, Cursor and Gemini, are the property of their respective owners.

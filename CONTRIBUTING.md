@@ -25,13 +25,25 @@ to change something, seven rules cover it.
    treats it as read-only. `Write(path)` is not a rule Claude Code reads, use
    `Edit(path)`. A script the skill ships is granted by its path -
    `Bash(${CLAUDE_SKILL_DIR}/scripts/name.sh *)` - which keeps the grant to
-   that one file wherever the pack is installed.
+   that one file wherever the pack is installed. `allowed-tools` in this list
+   form and `${CLAUDE_SKILL_DIR}` are Claude Code-specific. Codex, Cursor and
+   Gemini CLI ignore the field, per their documentation (not tested), and on
+   Codex CLI 0.151 the skill's `!` line, which used the variable, arrived as
+   plain text (a check made before the skill's last two changes). So a skill should
+   read sensibly without them: name the script or reference file by its place
+   next to `SKILL.md`, the way `os-what-could-go-wrong` falls back to
+   `references/premortem-prompt.md`.
 7. **Keep a `SKILL.md` under 167 lines**, the length of the longest one here.
    Past that it is carrying something that belongs in a script or in
    `references/`. The measured half of `os-big-picture` moved into
    `scripts/census.sh` for exactly this reason, and got tests out of it.
 
-Testing the hooks: `bash hooks/test.sh` puts both of them through fourteen
+Writing a runner so the evals can measure another tool (issues #38, #39,
+#40)? The contract is in
+[`evals/README.md`](evals/README.md#measuring-another-agent), section
+"Measuring another agent".
+
+Testing the hooks: `bash hooks/test.sh` puts both of them through its
 scenarios in throwaway repositories, two of them through the adapter (Cursor, then
 Gemini CLI) and three through the census script of `os-big-picture`, with a
 throwaway home directory, so it
@@ -40,7 +52,7 @@ from standard input: add `</dev/null` or they sit there waiting for a payload
 that never comes.
 
 The same file covers the scripts a skill ships. `os-big-picture` measures its
-map with `skills/os-big-picture/scripts/census.sh`, and cases 11 and 12 build
+map with `skills/os-big-picture/scripts/census.sh`, and case 13 builds
 throwaway repositories with forged commit dates (`GIT_COMMITTER_DATE`) to check
 both sides of the signal: a quiet part nothing reaches must be named, and a
 quiet part something still reaches must not be. Anything a skill can hand to a

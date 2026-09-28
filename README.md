@@ -7,6 +7,9 @@
 **Skills that keep development open to the person running it: the sessions,
 the decisions, the next steps, the whole picture, all in plain language.**
 
+Plain-language agent skills, built and measured on Claude Code. They also
+install on Codex, Cursor and Gemini CLI.
+
 By [Pavlo Kharmanskyi](https://github.com/kharmanskyi).
 
 I'm not an engineer. I'm a market-led builder: I look for where demand already
@@ -71,12 +74,18 @@ in this repository, with notes on what the rewrite changed:
 
 ## Quick start
 
-Claude Code is what the pack is built and measured on, and the only tool where
-everything works with no extra steps. The skills and the routing block also
-install into Codex, Cursor and Gemini CLI, see
-[Other agents](#other-agents-codex-cursor-gemini-cli) below. `git` and `gh` are
-optional: a couple of the skills read project state through them, and without
-those tools more of the output honestly says "not checked".
+The pack installs into Claude Code, Codex, Cursor and Gemini CLI. On Claude
+Code a plugin wires the skills and both hooks in one command. On Codex, Cursor
+and Gemini CLI one copy command installs the skills, and the hooks take a few
+lines of settings per tool, see
+[Other agents](#other-agents-codex-cursor-gemini-cli) below. What was run on
+each tool, and what comes from its documentation, is in the
+[table at the end of this section](#what-was-run-on-each-tool).
+
+### First, for any tool
+
+`git` and `gh` are optional: a couple of the skills read project state through
+them, and without those tools more of the output honestly says "not checked".
 
 Clone this repository:
 
@@ -84,8 +93,19 @@ Clone this repository:
 git clone https://github.com/kharmanskyi/open-steps.git
 ```
 
-Both commands below run from the folder you cloned it into, the one that now
-holds `open-steps/`, not from inside the clone. First, install it as a plugin:
+The commands below run from the folder you cloned it into, which now holds
+`open-steps/`, not from inside the clone.
+
+On Claude Code, Codex, Cursor and Gemini CLI alike, one piece is worth adding
+by hand: the routing block, in the file that tool reads as standing
+instructions. Skills are something the model chooses to use. The hooks remind
+it; on Claude Code the block makes it a rule. Each tool's section below says
+where it goes.
+[Why the block matters](docs/claude-md.md).
+
+### Claude Code
+
+Install the pack as a plugin:
 
 ```bash
 claude plugin marketplace add ./open-steps && claude plugin install open-steps@open-steps
@@ -98,19 +118,15 @@ claude plugin details open-steps
 ```
 
 Later, to check the whole install rather than just the plugin, run
-`/open-steps:os-install-check` in the agent. It reports what is wired and what is
-not, and says "not checked" where it could not look.
+`/open-steps:os-install-check` in Claude Code. It reports what is wired and
+what is not, and says "not checked" where it could not look.
 
-One thing is worth adding by hand, and no installer can do it for you: a short
-block in your own `~/.claude/CLAUDE.md`. Skills are something the model
-chooses to use. The hooks remind it; the block makes it a rule, and it
-survives long conversations. One command, from the same folder, safe to re-run:
+The routing block goes in your own `~/.claude/CLAUDE.md`, where it survives
+long conversations. One command, from the same folder, safe to re-run:
 
 ```bash
 grep -q 'os-done-or-not' ~/.claude/CLAUDE.md 2>/dev/null || cat open-steps/docs/routing-block.md >> ~/.claude/CLAUDE.md
 ```
-
-The reasoning is in [`docs/claude-md.md`](docs/claude-md.md).
 
 To update: `git pull` inside `open-steps/`, then
 `claude plugin update open-steps@open-steps`. Both halves matter: the plugin
@@ -118,46 +134,94 @@ updates from your clone, not from GitHub, so without the pull "already at the
 latest version" is true of the folder and wrong about this repository. And
 `update` wants the full plugin@marketplace name, where `uninstall` accepts the
 short one. And the update moves files only when the version number changed: a
-pull that brings no new version brings nothing to the installed copy, so every
-change meant to reach it ships with a version bump and a release. To remove: `claude plugin uninstall open-steps`, then take the
+pull that brings no new version brings nothing to the installed copy, so a
+change meant to reach it ships with a version bump and a release. To remove:
+`claude plugin uninstall open-steps`, then take the
 block back out of your `CLAUDE.md`.
 
-The one piece that stays manual is the writing style, because turning it on
-would silently replace whatever style you already chose. Two lines, in
-[`docs/output-style.md`](docs/output-style.md).
+On Claude Code there is also an optional writing style. It is left off by
+default because turning it on would replace a style you already chose. Two
+lines, in [`docs/output-style.md`](docs/output-style.md). It is a Claude Code
+setting, and the pack does not wire it on Codex, Cursor or Gemini CLI today.
 
-## Other agents: Codex, Cursor, Gemini CLI
+### Other agents: Codex, Cursor, Gemini CLI
 
-Codex, Cursor and Gemini CLI all read `~/.agents/skills/`, so one command
-installs the pack into all three. Run it from the folder holding the clone:
+Codex, Cursor and Gemini CLI read `~/.agents/skills/`, so one command
+installs the skills for each of the three. Run it from the folder holding the
+clone:
 
 ```bash
 mkdir -p ~/.agents/skills && cp -R open-steps/skills/os-* ~/.agents/skills/
 ```
 
-Then the routing block goes into whatever that tool treats as your standing
-instructions, doing the same job it does in `CLAUDE.md` above:
+Then the routing block goes into the file each tool reads as standing
+instructions. A one-line command for each, safe to re-run, is in
+[`docs/other-agents.md`](docs/other-agents.md#the-routing-block).
 
-| Tool | Routing block goes in | Evidence |
-|---|---|---|
-| Codex | `~/.codex/AGENTS.md` | checked, on Codex CLI 0.145 |
-| Cursor | `AGENTS.md` in the project root | Cursor's documentation |
-| Gemini CLI | `~/.gemini/GEMINI.md` | checked, on Gemini CLI 0.58.0 |
+| Tool | Routing block goes in |
+|---|---|
+| Codex | `~/.codex/AGENTS.md` |
+| Cursor | `AGENTS.md` in the project root |
+| Gemini CLI | `~/.gemini/GEMINI.md` |
 
-The hooks are the part that differs per tool. Codex runs both of them
-unchanged, with a short block in `~/.codex/config.toml` and one trust prompt to
-accept. Cursor runs both through `hooks/adapter.sh`, which wraps them in the
-JSON Cursor wants; a stop cannot be blocked there, so the report is asked for
-as a follow-up message rather than required, and only in an interactive
-session, since a headless run never reaches the stop hook. Gemini CLI runs
-both through the same adapter, and there the stop can refuse, on `AfterAgent`;
-the one thing to know is that its file tool cannot write outside the
-workspace, so the request says to save the report with the shell tool, and
-the docs say the rest. On all three, the skills and
-the routing block install; how reliably the skills fire there is not checked.
+The hooks are the part that differs per tool. For Codex, the same two scripts
+are wired with a short block in `~/.codex/config.toml`; per Codex's hook
+documentation it then asks once to trust them. The scripts were checked
+against Codex-shaped input by hand; Codex running them in a live session has
+not been watched yet. On Cursor CLI both run through `hooks/adapter.sh`, which
+wraps them in the JSON Cursor CLI wants. A stop cannot be blocked there, so the
+report is asked for as a follow-up message rather than required, and a
+headless run (`agent -p`) did not reach the stop hook. On Gemini CLI both run
+through the same adapter, and there the stop can refuse, on `AfterAgent`. One
+thing to know: its file tool cannot write outside the workspace, so the
+request says to save the report with the shell tool, after a headless run
+wrote it to Gemini's own temp folder; that sentence went in after the run and
+was not itself watched. A contributor ran both hooks live on
+Cursor CLI 2026.09.02 and Gemini CLI 0.58.0, on Windows 11; the maintainer has
+not reproduced them, and the Cursor desktop app has not been tried.
 
-The commands, the paths, the Codex hook config, and what was run rather than
-read: [`docs/other-agents.md`](docs/other-agents.md).
+To check the install on these three, run `bash open-steps/doctor.sh` from the
+folder holding the clone. It reads the shared skills folder and each tool's
+own, the routing block, and the hook settings of each tool it finds, and says
+"not checked" for what it cannot look at. It does not check which event each
+hook sits under yet.
+
+To update: `git pull` inside `open-steps/`, then run the copy command again.
+It is a copy, so the installed skills stay as they were until you do. To
+remove (these steps have not been run yet): delete the `os-*` folders from
+`~/.agents/skills/`, take the block out of that tool's instructions file, and
+remove the two hook entries from its settings file (`~/.codex/config.toml`,
+`~/.cursor/hooks.json` or `~/.gemini/settings.json`).
+
+The commands, the paths, the hook settings for each tool, and what was run
+rather than read: [`docs/other-agents.md`](docs/other-agents.md).
+
+### What was run on each tool
+
+Activation is measured on Claude Code so far; runners for the other tools are
+open issues:
+[#39](https://github.com/kharmanskyi/open-steps/issues/39) Codex,
+[#40](https://github.com/kharmanskyi/open-steps/issues/40) Cursor,
+[#38](https://github.com/kharmanskyi/open-steps/issues/38) Gemini CLI.
+
+| | Skills install | Routing block | Session-start hook | Stop hook | Switches on by itself | Premortem fresh agent |
+|---|---|---|---|---|---|---|
+| Claude Code | watched: plugin install from a clean empty account | in place in the measured runs | watched, wired by the plugin; on in the measured runs | watched, wired by the plugin; off in the measured runs | measured, 2026-09-12: Haiku 4.5 85%, Sonnet 5 98%, Opus 5 100% | measured, 2026-09-14: 9 of 9 runs on Sonnet 5, 8 of 9 on Opus 5 |
+| Codex | watched: listed on Codex CLI 0.145, 2026-08-25 (OS not recorded) | from Codex's docs | checked by hand on test input | checked by hand on test input | not measured (#39) | watched: did not start in 4 runs, and all 4 wrongly called the review independent; Codex CLI 0.151, Linux |
+| Cursor CLI | watched: 2026.09.02, Windows 11 | from Cursor's docs | watched: 2026.09.02, Windows 11 | watched: asks, cannot require; 2026.09.02, Windows 11 | not measured (#40) | not tried |
+| Gemini CLI | watched: 0.58.0, Windows 11 | watched in place: 0.58.0, Windows 11; not seen steering a skill | watched: 0.58.0, Windows 11 | watched: refuses on `AfterAgent`; 0.58.0, Windows 11 | not measured (#38) | not tried |
+
+"Watched" on Cursor CLI and Gemini CLI means one contributor's runs on
+Windows 11; the maintainer has not reproduced them. "Checked by hand on test
+input" means the Codex hook scripts were fed Codex-shaped input
+(`hooks/test.sh` CASE 9); Codex running them in a live session has not been
+watched. The Codex listing on 2026-08-25 covered the six skills the pack had
+then; it (PR #1) and the Codex premortem runs (PR #29) were contributors' runs
+too. The Codex
+premortem check came before the skill's last two changes. Outside Claude Code
+no skill has been seen switching on from a user phrase: `os-done-or-not` ran
+on Cursor CLI and Gemini CLI when the stop hook asked for it, and
+`os-what-could-go-wrong` ran four times on Codex CLI 0.151.
 
 ## The skills
 
@@ -228,6 +292,10 @@ from then on.
 
 ## Numbers
 
+These numbers are for Claude Code with Claude models. Runners for the other
+tools are open issues: [#39](https://github.com/kharmanskyi/open-steps/issues/39) Codex, [#40](https://github.com/kharmanskyi/open-steps/issues/40) Cursor,
+[#38](https://github.com/kharmanskyi/open-steps/issues/38) Gemini CLI.
+
 The pack tells the agent to separate what it measured from what it assumed.
 Same rule for me.
 
@@ -235,8 +303,8 @@ Twenty-five phrases a person would actually say, three per skill plus one
 boundary case, each asked three times, headless, in a working installation, on
 three Claude models. The question every time: did the right skill switch on by
 itself? Three off-topic questions, each also asked three times, checked the
-opposite. Remeasured in full on 2026-09-12, the first sweep with all eight
-skills in it.
+opposite. Remeasured in full on 2026-09-12, the first sweep with
+`os-big-picture` in it.
 
 `os-big-picture` and `os-whats-next` both answer a question about the project
 as a whole, so the new skill was the one most likely to take a phrase from the
@@ -305,50 +373,73 @@ to look: [`cases.md`](evals/cases.md) is every phrase we ask,
 miss above has a row you can read. The scorer writes that file; I don't type
 it. Scoring is a plain script reading tool calls, with no AI judging anything.
 Re-run it with `bash evals/run.sh`, or `EVAL_MODEL=opus bash evals/run.sh` for
-another model.
+another model. `EVAL_AGENT` picks the tool: Claude Code's runner ships in
+`evals/agents/`, and a runner for another tool follows the contract in
+[`evals/README.md`](evals/README.md#measuring-another-agent), "Measuring
+another agent".
 
 Also measured, and easy to check yourself: the skill descriptions cost **770
 tokens per session**, always on, which Claude Code reports itself with
 `claude plugin details open-steps`. That figure was taken before
 `os-what-could-go-wrong` was added and has not been retaken; run the command
 for the current one. The session-start hook adds its injection
-on top, capped by `OPEN_STEPS_MAX_REPORT_LINES`. Installing works from a
-clean empty account, with both hooks connected. `claude plugin validate
+on top, capped by `OPEN_STEPS_MAX_REPORT_LINES`. On Claude Code, installing
+works from a clean empty account, with both hooks connected. `claude plugin validate
 --strict` passes.
 
 ## How the pack is built
 
 Each skill is one folder with one `SKILL.md` inside: a short header, then the
-rules. Some also carry a worked example in a `references/` folder. Nothing
-runs on your machine except the two hooks, and those are plain shell scripts
-you can read in a minute.
+rules. Some also carry a worked example in a `references/` folder. What runs
+on your machine is plain shell: the two hooks, short enough to read in a
+minute (on Cursor CLI and Gemini CLI through `hooks/adapter.sh`); two small
+scripts that `os-big-picture` and `os-what-could-go-wrong` call (the second
+through Claude Code's `!` command; in a Codex CLI 0.151 check, made before
+that line was changed to call the script, the older line arrived as text and
+Codex read the `references/` file instead); and the install
+check, `doctor.sh`, when you run it. The skills also have the agent run `git`
+and `gh` commands, including merges, as the next paragraph says.
 
 One thing to know before installing: **the pack finishes finished work by
 itself.** If a pull request has green checks and an approved review, it gets
-verified once more and merged. No asking. Whatever unblocks the most goes
-first. Only two things stop a merge: a claim that fails verification, or a
-note on the task saying merges happen on command only. Write that note
-wherever an orchestrator owns the merge; put the same note in your own
-`~/.claude/CLAUDE.md` if you never want merges happening on their own.
+verified once more and merged. On Claude Code that happens without a
+permission prompt; on Codex, Cursor and Gemini CLI the merge command goes
+through that tool's own permission settings, per their documentation. Whatever
+unblocks the most goes first. Two things stop a merge: a claim that fails
+verification, or a note on the task saying merges happen on command only.
+Write that note wherever an orchestrator owns the merge; put the same note in
+your standing instructions file (`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`,
+`~/.gemini/GEMINI.md`, or the project's `AGENTS.md` on Cursor) if you want
+merges on command only.
 
-And what a skill may do without asking. A skill can pre-approve tools for the
-one turn it runs in, so this pack keeps that list down to what it actually
-needs: its own reports folder, the `gh pr` calls that read a pull request, and
-`gh pr merge`, because merging finished work is the behaviour above. Nothing
-else. Every other command, and every file outside your project and that
-folder, goes through your own permission settings as usual. Reading with `git`
-needs no entry at all: Claude Code already treats read-only `git` as
-read-only.
+And what a skill may do without asking. On Claude Code a skill can
+pre-approve tools for the turn it runs in (the `allowed-tools` field), and
+this pack keeps that list to what the skills use: reading its own reports
+folder, and writing there for `os-done-or-not`; the `gh pr` calls that read a
+pull request (`list`, `view`, `checks`, `diff`); `gh pr merge`, because merging
+finished work is the behaviour above; for `os-big-picture`, editing its own
+`BIG-PICTURE.md`, its census script, one `git rev-parse --git-dir` call that
+finds the repository folder, `gh repo view`, and `gh issue list` and
+`gh issue create`, which open tickets after you say yes; the premortem's
+prompt script for `os-what-could-go-wrong`; and `doctor.sh` for the install
+check command. Other commands, and files outside your project and the reports folder,
+go through your own permission settings as usual. Other read-only `git` needs
+no entry: Claude Code already treats read-only `git` as read-only. Per their
+documentation, Codex, Cursor and Gemini CLI ignore the field and ask the way
+they normally do; not tested.
 
 Three decisions shape everything here:
 
-1. **Descriptions are commands, not summaries.** Every skill opens with
-   "ALWAYS invoke this skill when…". Published measurements say this form
-   fires far more reliably than a polite description.
-2. **A skill cannot force itself to run.** Anything that must hold in every
-   reply lives in `CLAUDE.md` or the output style instead. The pack says
-   which layer each piece belongs to.
-3. **Measured and assumed never mix.** A "yes" has to name its proof.
+1. **Descriptions are commands, not summaries.** The skill descriptions
+   open with "ALWAYS invoke this skill…". With this form the skills switched on
+   in 98-100% of the test runs on Sonnet 5 and Opus 5 and 85% on Haiku 4.5 (25
+   phrases, Claude Code, 2026-09-12); the evals do not compare it with other wordings. See
+   [Numbers](#numbers).
+2. **A skill cannot force itself to run.** Anything that must hold in each
+   reply lives in the tool's standing instructions file (`CLAUDE.md`,
+   `AGENTS.md`, `GEMINI.md`) or, on Claude Code, the output style instead.
+   The pack says which layer each piece belongs to.
+3. **Measured and assumed stay apart.** A "yes" has to name its proof.
    Anything unchecked says "not checked". This is also why the reports are
    short: the agent stops narrating its checks and states the result.
 
@@ -358,10 +449,22 @@ sentence. Borrow is the word. Nothing here is certified against the standard.
 
 ## Optional pieces and limits
 
-The [`answer-first`](docs/output-style.md) output style makes the agent put
-the answer in the first line and stop narrating its verification.
+On Claude Code, the [`answer-first`](docs/output-style.md) output style makes
+the agent put the answer in the first line and stop narrating its
+verification. It is a Claude Code setting; the pack does not wire it on Codex,
+Cursor or Gemini CLI.
 
-Two hooks come connected with the plugin.
+The routing block goes in the file each tool reads as standing instructions:
+`~/.claude/CLAUDE.md` on Claude Code, `~/.codex/AGENTS.md` on Codex, the
+project's `AGENTS.md` on Cursor, `~/.gemini/GEMINI.md` on Gemini CLI. Claude
+Code also reads a project's `AGENTS.md` when that project has no `CLAUDE.md`
+(v2.1.277 and later, per its release notes), so a block added there for Cursor
+reaches Claude Code in that project as well.
+
+Two hooks ship with the pack. The Claude Code plugin connects them for you; on
+Codex, Cursor and Gemini CLI you wire them by hand, as
+[`docs/other-agents.md`](docs/other-agents.md) shows, and on Cursor CLI the
+stop hook can ask for a report but cannot require one.
 [`session-start.sh`](hooks/session-start.sh) puts the routing table and the
 last report in front of a new session, and quietly records what your
 repositories looked like at that moment.
@@ -382,15 +485,22 @@ injection to your context, capped by the setting below. Their settings:
 | `OPEN_STEPS_NO_SESSION_START` | unset | set to anything to switch the start hook off |
 
 Reports are saved outside your repositories, in
-`~/.claude/open-steps/reports/<project>/`, so they never land in a commit and
-they survive uninstalling the pack.
+`~/.claude/open-steps/reports/<project>/`, so they stay out of your commits
+and survive uninstalling the pack. The folder name says Claude, but it is only
+a path, and each tool is pointed at it so they share one history. On Gemini
+CLI the report has to be saved with the shell tool; a headless run was seen
+writing it elsewhere.
 
 And the honest limits. Not every skill has a worked example yet.
 `os-whats-next` and `os-check-work` read project state through `git` and `gh`;
 without those tools, more of the output says "not checked". The writing style
-does not reach subagents; `os-what-could-go-wrong`, the only skill that
-dispatches one, carries its rules inside the handover instead, so its plain
-language rests on `references/premortem-prompt.md` alone.
+does not reach subagents, so `os-what-could-go-wrong` carries its rules inside
+the handover to its fresh agent, and its plain language rests on
+`references/premortem-prompt.md`. In Claude Code the premortem hands its
+review to a fresh agent: 9 of 9 runs on Sonnet 5 and 8 of 9 on Opus 5
+(2026-09-14). On Codex CLI 0.151 no fresh agent started in four runs and the
+agent ran the review itself; that check came before the skill's last two
+changes.
 
 ## Open source
 
@@ -406,6 +516,7 @@ If it helped, a star makes it easier for other people to find.
 
 MIT - see [LICENSE](LICENSE). © 2026 Pavlo Kharmanskyi.
 
-Open Steps Skills is an independent and open-source project. Claude and Claude
-Code are trademarks of Anthropic. All other trademarks are the property of their
-respective owners.
+Open Steps is an independent open-source project, not affiliated with or
+endorsed by the makers of the tools it runs on. Claude and Claude Code are
+trademarks of Anthropic. All other trademarks, including Codex, Cursor and
+Gemini, are the property of their respective owners.

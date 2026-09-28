@@ -2,7 +2,7 @@
 
 # Open Steps
 
-*Перевод английского README от 12 сентября 2026 года. Числа замеров, устройство пака и заметки для контрибьюторов остаются в [английском README](README.md): там они меняются каждую неделю. Здесь то, что меняется редко. Если нашли неточность, поправьте через pull request.*
+*Перевод английского README от 12 сентября 2026 года. Числа замеров, устройство пака и заметки для контрибьюторов остаются в [английском README](README.md): там они меняются каждую неделю. Здесь то, что меняется редко. Если нашли неточность, поправьте через pull request. Установка на Codex, Cursor и Gemini CLI описана в разделе Quick start [английского README](README.md#other-agents-codex-cursor-gemini-cli).*
 
 **Навыки, которые держат разработку открытой для того, кто ею управляет: сессии, решения, следующие шаги, общая картина, и всё простыми словами.**
 
@@ -31,13 +31,15 @@
 
 ## Установка
 
-Пак собран и измерен на Claude Code, там всё работает без дополнительных шагов. Навыки ставятся также в Codex, Cursor и Gemini CLI, см. [другие агенты](docs/other-agents.md) (по-английски).
+Пак собран и измерен на Claude Code; там плагин подключает навыки и оба хука одной командой. Навыки ставятся также в Codex, Cursor и Gemini CLI: их ставит одна команда копирования, а хуки настраиваются несколькими строками для каждого инструмента, см. [другие агенты](docs/other-agents.md) (по-английски).
 
 Скачайте репозиторий:
 
 ```bash
 git clone https://github.com/kharmanskyi/open-steps.git
 ```
+
+### Claude Code
 
 Обе команды ниже запускаются из папки, в которую вы его скачали, той, где теперь лежит `open-steps/`, а не изнутри неё. Установите как плагин:
 
@@ -61,8 +63,10 @@ grep -q 'os-done-or-not' ~/.claude/CLAUDE.md 2>/dev/null || cat open-steps/docs/
 
 ## Обновление и удаление
 
-Обновить: `git pull` внутри `open-steps/`, затем `claude plugin update open-steps@open-steps`. Нужны обе половины: плагин обновляется из вашей папки, а не с GitHub, и файлы попадают в установленную копию только когда сменился номер версии. Удалить: `claude plugin uninstall open-steps`, затем убрать блок из `CLAUDE.md`.
+**Claude Code.** Обновить: `git pull` внутри `open-steps/`, затем `claude plugin update open-steps@open-steps`. Нужны обе половины: плагин обновляется из вашей папки, а не с GitHub, и файлы попадают в установленную копию только когда сменился номер версии. Удалить: `claude plugin uninstall open-steps`, затем убрать блок из `CLAUDE.md`.
 
 ## Лицензия
 
 MIT. Пак публичный, вклад приветствуется: правила для контрибьюторов в [CONTRIBUTING.md](CONTRIBUTING.md) (по-английски).
+
+Open Steps is an independent open-source project, not affiliated with or endorsed by the makers of the tools it runs on. Claude and Claude Code are trademarks of Anthropic. All other trademarks, including Codex, Cursor and Gemini, are the property of their respective owners.

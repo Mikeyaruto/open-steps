@@ -26,8 +26,8 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v7
-      # Fifteen scenarios: the two hooks, two through the adapter, three through
-      # the census script of os-big-picture and one through doctor.sh, in
+      # Its scenarios: the two hooks, two through the adapter, three through
+      # the census script of os-big-picture and several through doctor.sh, in
       # throwaway repositories with a throwaway home directory. Needs no git
       # identity and touches nothing outside them.
       - run: bash hooks/test.sh

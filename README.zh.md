@@ -2,7 +2,7 @@
 
 # Open Steps
 
-*译自 2026 年 9 月 12 日的英文 README。测量数据、内部结构和贡献者说明都在[英文 README](README.md) 里，那边每周都在变；这一页只放很少变动的内容。翻译借助了 AI，尚未经母语者审校。看到翻译有误，欢迎用 pull request 修正。*
+*译自 2026 年 9 月 12 日的英文 README。测量数据、内部结构和贡献者说明都在[英文 README](README.md) 里，那边每周都在变；这一页只放很少变动的内容。翻译借助了 AI，尚未经母语者审校。看到翻译有误，欢迎用 pull request 修正。在 Codex、Cursor 和 Gemini CLI 上的安装方法见[英文 README](README.md#other-agents-codex-cursor-gemini-cli) 的 Quick start 部分。*
 
 **一组技能，让主导开发的人始终看得见开发过程：会话、决策、下一步、全局，全部用大白话。**
 
@@ -31,13 +31,15 @@
 
 ## 安装
 
-这个技能包在 Claude Code 上构建和测量，在那里不需要额外步骤就能全部工作。技能也可以装进 Codex、Cursor 和 Gemini CLI，见[其他智能体](docs/other-agents.md)（英文）。
+这个技能包在 Claude Code 上构建和测量，在那里一个插件用一条命令接好技能和两个钩子。技能也可以装进 Codex、Cursor 和 Gemini CLI：一条复制命令装好技能，钩子则需要为每个工具写几行设置，见[其他智能体](docs/other-agents.md)（英文）。
 
 下载仓库：
 
 ```bash
 git clone https://github.com/kharmanskyi/open-steps.git
 ```
+
+### Claude Code
 
 下面两条命令都在你下载到的那个文件夹里运行，也就是现在包含 `open-steps/` 的那个文件夹，而不是在它内部。作为插件安装：
 
@@ -61,8 +63,10 @@ grep -q 'os-done-or-not' ~/.claude/CLAUDE.md 2>/dev/null || cat open-steps/docs/
 
 ## 更新与卸载
 
-更新：在 `open-steps/` 里 `git pull`，然后 `claude plugin update open-steps@open-steps`。两步都要：插件从你的文件夹更新，不是从 GitHub；而且只有版本号变了，文件才会进入已安装的副本。卸载：`claude plugin uninstall open-steps`，再把那一段从 `CLAUDE.md` 里删掉。
+**Claude Code.** 更新：在 `open-steps/` 里 `git pull`，然后 `claude plugin update open-steps@open-steps`。两步都要：插件从你的文件夹更新，不是从 GitHub；而且只有版本号变了，文件才会进入已安装的副本。卸载：`claude plugin uninstall open-steps`，再把那一段从 `CLAUDE.md` 里删掉。
 
 ## 许可
 
 MIT。这是公开的技能包，欢迎贡献：规则见 [CONTRIBUTING.md](CONTRIBUTING.md)（英文）。
+
+Open Steps is an independent open-source project, not affiliated with or endorsed by the makers of the tools it runs on. Claude and Claude Code are trademarks of Anthropic. All other trademarks, including Codex, Cursor and Gemini, are the property of their respective owners.

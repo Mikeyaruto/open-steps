@@ -56,6 +56,11 @@ or `Signal` back out of the file - only `Stage` and the queue carry forward.
 bash "${CLAUDE_SKILL_DIR}/scripts/census.sh" .
 ```
 
+Outside Claude Code `${CLAUDE_SKILL_DIR}` is usually not set, so that path
+does not exist. There, run `scripts/census.sh` from the folder this `SKILL.md`
+is in, with the same `.` argument. If the script cannot be run at all, say so
+and mark every measured column "not checked"; never estimate them.
+
 An `AGE` line, then one measured `PART` row per part: path, last worked on,
 commits in six months, whether anything outside reaches it, the signal.
 

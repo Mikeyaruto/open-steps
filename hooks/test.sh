@@ -353,6 +353,337 @@ check "and puts the agent's own words after it, never in its place" 0 $?
 [ "$(wc -l < "$SK/SKILL.md" | tr -d ' ')" -le 150 ]
 check "the skill fits its 150-line ceiling" 0 $?
 
+echo "CASE 18  the doctor on Codex, Cursor and Gemini CLI installs"
+# Codex, Cursor and Gemini CLI read one skills folder, ~/.agents/skills, and
+# each has a folder of its own too. The doctor once took any copy in the shared
+# folder as a Codex install and judged every machine as if Claude Code were on
+# it, so a correct install on any of the three read as broken, with exit 9.
+# Each home below is a correct install as docs/other-agents.md describes it.
+# The doctor runs with only HOME and a PATH holding the tools it calls, so a
+# claude command on the machine running this suite cannot leak in. Two-sided:
+# a real fault in each still reads as one.
+err="$(mktemp)"
+dhome() {
+  H="$(mktemp -d)"
+  mkdir -p "$H/bin"
+  # type -P, not command -v: a shell function by the same name has no path.
+  for t in awk basename dirname find grep head sed tr; do
+    ln -s "$(type -P "$t")" "$H/bin/$t"
+  done
+}
+doctor() { env -i HOME="$H" PATH="$H/bin" "$BASH" "$PACK/doctor.sh" 2>"$err"; }
+shared() { mkdir -p "$H/.agents/skills" && cp -R "$PACK"/skills/os-* "$H/.agents/skills/"; }
+own() { mkdir -p "$H/$1/skills" && cp -R "$PACK"/skills/os-* "$H/$1/skills/"; }
+said() { printf '%s\n' "$out" | grep -Eq "$1"; }
+# The summary line is what a sound install prints. Checking only for the
+# absence of a fault would pass on a doctor that printed nothing at all.
+sound() { # $1 which install
+  said '^  FAULT'; check "$1: no fault" 1 $?
+  said '^  No fault found\.$'; check "$1: the result says no fault found" 0 $?
+  check "$1: exit 0" 0 "$code"
+  [ ! -s "$err" ]; check "$1: nothing on stderr" 0 $?
+}
+gemini_hooks() { # $1 the adapter path the settings name
+  mkdir -p "$H/.gemini"
+  printf '{"hooks":{"SessionStart":[{"hooks":[{"type":"command","name":"open-steps-session-start","command":"bash %s gemini session-start"}]}],"AfterAgent":[{"hooks":[{"type":"command","name":"open-steps-stop-report","command":"bash %s gemini stop"}]}]}}\n' \
+    "$1" "$1" > "$H/.gemini/settings.json"
+}
+wire_gemini() {
+  gemini_hooks "$PACK/hooks/adapter.sh"
+  cat "$PACK/docs/routing-block.md" > "$H/.gemini/GEMINI.md"
+}
+wire_cursor() { # $1 the adapter path the hooks file names
+  mkdir -p "$H/.cursor"
+  printf '{"version":1,"hooks":{"sessionStart":[{"command":"%s cursor session-start","timeout":10}],"stop":[{"command":"%s cursor stop","timeout":10}]}}\n' \
+    "$1" "$1" > "$H/.cursor/hooks.json"
+}
+wire_codex() {
+  mkdir -p "$H/.codex"
+  cat "$PACK/docs/routing-block.md" > "$H/.codex/AGENTS.md"
+  printf '[[hooks.session_start]]\n[[hooks.session_start.hooks]]\ntype = "command"\ncommand = "%s/hooks/session-start.sh"\ntimeout_sec = 10\n\n[[hooks.stop]]\n[[hooks.stop.hooks]]\ntype = "command"\ncommand = "%s/hooks/stop-report.sh"\ntimeout_sec = 10\n' \
+    "$PACK" "$PACK" > "$H/.codex/config.toml"
+}
+wire_claude() {
+  mkdir -p "$H/.claude/plugins"
+  printf '{"version":2,"plugins":{"open-steps@open-steps":[{"scope":"user","installPath":"%s","version":"0.0.0"}]}}\n' \
+    "$PACK" > "$H/.claude/plugins/installed_plugins.json"
+  printf '{"enabledPlugins":{"open-steps@open-steps":true}}\n' > "$H/.claude/settings.json"
+  cat "$PACK/docs/routing-block.md" > "$H/.claude/CLAUDE.md"
+}
+fake_claude() { printf '#!/bin/sh\nexit 0\n' > "$H/bin/claude" && chmod +x "$H/bin/claude"; }
+
+dhome; shared; wire_gemini
+# The hooks keep their reports under ~/.claude on every tool, so after one
+# session a Gemini CLI machine has that folder too. It is not Claude Code.
+mkdir -p "$H/.claude/open-steps/reports/proj"
+echo "a report" > "$H/.claude/open-steps/reports/proj/latest.md"
+out="$(doctor)"; code=$?
+sound "Gemini CLI only"
+said '^  not checked  No sign of Claude Code was found: no claude command on the PATH'
+check "Gemini CLI only: the Claude Code parts read not checked, not faulted" 0 $?
+said '^  ok +All [0-9]+ skills are copied into the shared skills folder'
+check "Gemini CLI only: the shared folder copy reads ok" 0 $?
+said 'is the shared skills folder, read by Codex, Cursor and Gemini CLI\.$'
+check "Gemini CLI only: the folder is named as shared by the three, and Claude Code is left out of it" 0 $?
+said '^  fact +Codex was not found'
+check "Gemini CLI only: no Codex, so no Codex checks" 0 $?
+said '^  fact +Your Gemini CLI instructions file has the whole routing block'
+check "Gemini CLI only: the routing block is reported as a fact" 0 $?
+said '^  fact +.*/\.gemini/settings\.json names both hook commands, adapter\.sh gemini session-start and adapter\.sh gemini stop, and the AfterAgent event'
+check "Gemini CLI only: the wired hooks are reported as a fact" 0 $?
+said '^  ok +The file Gemini CLI runs at the end of a session is there\.'
+check "Gemini CLI only: the adapter path in the settings was looked up" 0 $?
+# Claude Code on the machine with nothing of the pack in its files is not a
+# broken install while the pack is set up for another tool.
+fake_claude
+out="$(doctor)"; code=$?
+sound "Gemini CLI next to a Claude Code without the pack"
+said '^  fact +Claude Code is here, and nothing of the pack is set up for it'
+check "with a claude command and nothing of the pack for it, Claude Code is a fact" 0 $?
+rm "$H/bin/claude"; echo '{}' > "$H/.claude.json"
+out="$(doctor)"; code=$?
+said '^  fact +Claude Code is here, and nothing of the pack is set up for it'
+check "~/.claude.json is a sign of Claude Code" 0 $?
+check "and with the pack set up for Gemini CLI it is not a fault" 0 "$code"
+# A routing block in CLAUDE.md is the pack set up for Claude Code, so Claude
+# Code is judged again, and a plugin missing behind it is a fault.
+cat "$PACK/docs/routing-block.md" > "$H/.claude/CLAUDE.md"
+out="$(doctor)"; code=$?
+said '^  FAULT +No installed copy of the pack was found\. Claude Code cannot see it\.'
+check "a Claude Code routing block with no plugin behind it is a fault" 0 $?
+check "and the exit code names the skills" 1 "$code"
+
+# With the pack found for no other tool, Claude Code on the machine is judged.
+dhome; fake_claude
+out="$(doctor)"; code=$?
+said '^  FAULT +No installed copy of the pack was found\. Claude Code cannot see it\.'
+check "a claude command and the pack found for no tool: the missing install is a fault" 0 $?
+check "and the exit code says so" 9 "$code"
+dhome; echo '{}' > "$H/.claude.json"
+out="$(doctor)"; code=$?
+said '^  FAULT +No installed copy of the pack was found\. Claude Code cannot see it\.'
+check "~/.claude.json and the pack found for no tool: the same fault" 0 $?
+
+dhome; shared; wire_cursor "$PACK/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+sound "Cursor only"
+said '^  fact +.*/\.cursor/hooks\.json names both hook commands, adapter\.sh cursor session-start and adapter\.sh cursor stop'
+check "Cursor only: the wired hooks are reported as a fact" 0 $?
+
+dhome; shared; wire_codex
+out="$(doctor)"; code=$?
+sound "Codex only"
+said '^  ok +Your Codex instructions file has the whole routing block'
+check "Codex only: the Codex part ran" 0 $?
+said '^  ok +The file Codex runs at the end of a session is there\.'
+check "Codex only: and read the hook paths" 0 $?
+rm "$H/.codex/config.toml"
+out="$(doctor)"; code=$?
+said '^  FAULT +Codex has no settings file, so its hooks are not set up\.'
+check "Codex without its hooks is still a fault" 0 $?
+check "and the exit code names the hooks" 3 "$code"
+
+# A ~/.codex from Codex itself, with nothing of the pack in it, next to a copy
+# in the shared folder: no other tool that reads that folder is here, so the
+# copy is Codex's, and Codex is judged in full.
+dhome; shared
+mkdir -p "$H/.codex"; echo '{}' > "$H/.codex/auth.json"
+out="$(doctor)"; code=$?
+said '^  FAULT +Your Codex instructions file is not there'
+check "Codex as the one reader of the shared copy: no routing block is a fault" 0 $?
+said '^  FAULT +Codex has no settings file, so its hooks are not set up\.'
+check "Codex as the one reader of the shared copy: no hooks is a fault" 0 $?
+check "and the exit code names both" 9 "$code"
+printf 'model = "gpt-5"\n' > "$H/.codex/config.toml"
+out="$(doctor)"; code=$?
+said '^  FAULT +The Codex settings file sets up no hook for the start of a session and the end of a session\.$'
+check "a Codex settings file without the pack is judged the same way" 0 $?
+# With Gemini CLI here too, the copy could be either tool's, so it says so.
+wire_gemini
+out="$(doctor)"; code=$?
+sound "Codex and Gemini CLI sharing one copy"
+said '^  fact +Codex shares the copy in the shared skills folder with Gemini CLI'
+check "the fact names the tools that could be reading the copy" 0 $?
+
+# The tools' own folders count as a copy for that tool.
+dhome; own .gemini; wire_gemini
+out="$(doctor)"; code=$?
+sound "Gemini CLI with the skills in its own folder"
+said "^  ok +The pack's [0-9]+ skills are copied into Gemini CLI's own skills folder"
+check "Gemini CLI's own folder: the copy there reads ok" 0 $?
+said '^  fact +No skills from this pack are in the shared skills folder\.$'
+check "Gemini CLI's own folder: it says the shared folder was read and has none" 0 $?
+dhome; own .codex; wire_codex
+out="$(doctor)"; code=$?
+sound "Codex with the skills in its own folder"
+dhome; own .cursor; wire_cursor "$PACK/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+sound "Cursor with the skills in its own folder"
+
+# Claude Code alone, with nothing in the shared folders.
+dhome; wire_claude
+out="$(doctor)"; code=$?
+sound "Claude Code only"
+said '^  ok +The plugin is switched on\.'
+check "Claude Code only: the Claude Code part ran" 0 $?
+
+# Shortcuts in the shared folder rename the skills on Codex.
+dhome; mkdir -p "$H/.agents/skills"; ln -s "$PACK"/skills/os-* "$H/.agents/skills/"; wire_gemini
+out="$(doctor)"; code=$?
+sound "shortcut skills without Codex"
+said '^  fact +These skills in the shared skills folder are shortcuts, not copies:'
+check "shortcut skills without Codex: reported as a fact" 0 $?
+said '^  not checked  What Cursor and Gemini CLI do with a shortcut was not checked\.'
+check "and what was not checked has its own line" 0 $?
+said '^  fact .*not checked'
+check "no fact line carries a not checked" 1 $?
+mkdir -p "$H/.codex"; echo '{}' > "$H/.codex/auth.json"
+out="$(doctor)"; code=$?
+sound "shortcut skills next to a Codex with nothing of the pack"
+said '^  fact +These skills in the shared skills folder are shortcuts, not copies:'
+check "shortcut skills next to a Codex with nothing of the pack: a fact, not blamed on Codex" 0 $?
+wire_codex
+out="$(doctor)"; code=$?
+said '^  FAULT +These skills in the shared skills folder are shortcuts, not copies, so Codex gives them other names:'
+check "shortcut skills with Codex set up: a fault" 0 $?
+check "and the exit code names the skills" 1 "$code"
+
+dhome; shared; rm -rf "$H/.agents/skills/os-done-or-not"; wire_gemini
+out="$(doctor)"; code=$?
+said '^  FAULT +Part of the pack is in the shared skills folder, but these skills are not: os-done-or-not'
+check "a partial copy in the shared folder is a fault" 0 $?
+check "and the exit code names the skills" 1 "$code"
+
+dhome; wire_codex
+out="$(doctor)"; code=$?
+said '^  FAULT +Codex is set up for this pack, but none of its skills are'
+check "Codex set up with no copy of the skills is a fault" 0 $?
+check "and the exit code names the skills" 1 "$code"
+
+dhome; shared; wire_gemini; gemini_hooks "open-steps/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+said '^  not checked  .*/\.gemini/settings\.json gives adapter\.sh gemini stop a path that is not a full path'
+check "a hook path that is not a full path is not checked, not faulted" 0 $?
+check "and it is not a fault" 0 "$code"
+
+# The documentation's example paths read as wired and point at nothing.
+dhome; shared; wire_gemini; gemini_hooks "/path/to/open-steps/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+said '^  FAULT +.*/\.gemini/settings\.json still holds the example path'
+check "Gemini CLI hooks on the example path are a fault" 0 $?
+check "and the exit code names the hooks" 3 "$code"
+said 'names both hook commands'
+check "and they are not reported as wired" 1 $?
+gemini_hooks "$H/gone/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+said "^  FAULT +Gemini CLI runs a file that is not there at the start of a session: $H/gone/hooks/adapter\.sh"
+check "Gemini CLI hooks on a path with no file are a fault" 0 $?
+check "and the exit code names the hooks" 3 "$code"
+dhome; shared; wire_cursor "/absolute/path/to/open-steps/hooks/adapter.sh"
+out="$(doctor)"; code=$?
+said '^  FAULT +.*/\.cursor/hooks\.json still holds the example path'
+check "Cursor hooks on the example path are a fault" 0 $?
+check "and the exit code names the hooks" 3 "$code"
+
+dhome; shared; wire_claude; mkdir -p "$H/.gemini"
+cat "$PACK/docs/routing-block.md" > "$H/.gemini/GEMINI.md"
+out="$(doctor)"; code=$?
+sound "Claude Code with a Gemini CLI copy"
+said '^  ok +The plugin is switched on\.'
+check "Claude Code with a Gemini CLI copy: the Claude Code part ran" 0 $?
+said '^  fact +Codex was not found'
+check "Claude Code with a Gemini CLI copy: the copy is not taken for Codex" 0 $?
+said 'read by Codex, Cursor and Gemini CLI\. Claude Code does not read it; it runs the plugin.s copy\.$'
+check "with Claude Code here, the shared folder line says Claude Code does not read it" 0 $?
+rm "$H/.claude/CLAUDE.md"
+out="$(doctor)"; code=$?
+said '^  FAULT +Your Claude Code instructions file is not there'
+check "a missing Claude Code routing block is still a fault" 0 $?
+check "and the exit code names the routing block" 2 "$code"
+
+# A marketplace Claude Code knows about is where a plugin comes from, not an
+# install. Added from the clone itself, its folder is the clone, and reading it
+# as the installed copy says ok about a plugin that is not there.
+dhome; shared; wire_gemini
+mkdir -p "$H/.claude/plugins"; echo '{}' > "$H/.claude.json"
+printf '{"open-steps":{"source":{"source":"directory","path":"%s"},"installLocation":"%s"}}\n' \
+  "$PACK" "$PACK" > "$H/.claude/plugins/known_marketplaces.json"
+printf '{"version":2,"plugins":{}}\n' > "$H/.claude/plugins/installed_plugins.json"
+printf '{"enabledPlugins":{}}\n' > "$H/.claude/settings.json"
+out="$(doctor)"; code=$?
+sound "Gemini CLI next to a Claude Code marketplace with no plugin installed"
+said '^  fact +Claude Code is here, and nothing of the pack is set up for it'
+check "a marketplace with no plugin installed: nothing of the pack is set up for Claude Code" 0 $?
+said 'running from the installed copy|The installed copy is at'
+check "and the marketplace folder is not read as the installed copy" 1 $?
+# A marketplace from GitHub lands in a folder of its own under plugins.
+mk="$H/.claude/plugins/marketplaces/open-steps"
+mkdir -p "$mk/.claude-plugin"
+cp "$PACK/.claude-plugin/plugin.json" "$PACK/.claude-plugin/marketplace.json" "$mk/.claude-plugin/"
+cp -R "$PACK/skills" "$mk/"
+printf '{"open-steps":{"source":{"source":"github","repo":"someone/open-steps"},"installLocation":"%s"}}\n' \
+  "$mk" > "$H/.claude/plugins/known_marketplaces.json"
+out="$(doctor)"; code=$?
+sound "Gemini CLI next to a Claude Code marketplace folder from GitHub"
+said 'The installed copy is at'
+check "a marketplace folder from GitHub is not read as the installed copy" 1 $?
+# With no other tool, the same Claude Code is judged, and has no plugin.
+rm -rf "$H/.agents" "$H/.gemini"
+out="$(doctor)"; code=$?
+said '^  FAULT +No installed copy of the pack was found\. Claude Code cannot see it\.'
+check "a marketplace alone is a Claude Code with no installed copy" 0 $?
+
+# Faults in Claude Code's own files still show next to a working Gemini CLI.
+dhome; shared; wire_gemini; mkdir -p "$H/.claude/plugins"
+printf '{"version":2,"plugins":{"open-steps@open-steps":[{"scope":"user","installPath":"%s","version":"0.0.0"}]}}\n' \
+  "$H/gone" > "$H/.claude/plugins/installed_plugins.json"
+out="$(doctor)"; code=$?
+said "^  FAULT +Claude Code's plugin registry, installed_plugins.json, names $H/gone as the installed copy, but there is no plugin there\."
+check "a stale registry entry next to Gemini CLI is a fault" 0 $?
+dhome; shared; wire_gemini; mkdir -p "$H/.claude"
+printf '{"enabledPlugins":{"open-steps@open-steps":true}}\n' > "$H/.claude/settings.json"
+out="$(doctor)"; code=$?
+said '^  FAULT +No installed copy of the pack was found\. Claude Code cannot see it\.'
+check "a plugin switched on in the settings with no copy behind it, next to Gemini CLI, is a fault" 0 $?
+
+# A copy in the shared folder counts for another tool only when a tool that
+# reads that folder is here.
+dhome; shared; mkdir -p "$H/.claude/plugins"; echo '{}' > "$H/.claude.json"
+printf '{"enabledPlugins":{}}\n' > "$H/.claude/settings.json"
+out="$(doctor)"; code=$?
+said '^  FAULT +No installed copy of the pack was found\. Claude Code cannot see it\.'
+check "a shared copy no tool reads does not excuse a Claude Code without the plugin" 0 $?
+check "and the exit code says so" 9 "$code"
+dhome; shared
+out="$(doctor)"; code=$?
+said '^  FAULT +The pack was found for no tool: its skills are in .*/\.agents/skills, but'
+check "a shared copy with no tool and no Claude Code: the pack is found for no tool" 0 $?
+check "and the exit code names the skills" 1 "$code"
+
+# A Codex with nothing of the pack in it is not the one reader of the shared
+# copy while the pack is set up for Claude Code.
+dhome; shared; wire_claude; mkdir -p "$H/.codex"; echo '{}' > "$H/.codex/auth.json"
+out="$(doctor)"; code=$?
+sound "Claude Code with an extra shared copy and a Codex with nothing of the pack"
+said '^  fact +The copy in the shared skills folder may be for Codex'
+check "the shared copy is reported as one that may be Codex's" 0 $?
+dhome; wire_claude; mkdir -p "$H/.codex"; echo '{}' > "$H/.codex/auth.json"
+printf 'model = "gpt-5"\n' > "$H/.codex/config.toml"
+out="$(doctor)"; code=$?
+sound "Claude Code next to a Codex with nothing of the pack"
+
+# With no Claude Code, nothing would be judged, so an empty machine must not
+# read as a sound install.
+dhome
+out="$(doctor)"; code=$?
+said '^  FAULT +No copy of the pack was found for any tool'
+check "the pack found for no tool is a fault, not a clean result" 0 $?
+said '^  FAULT +No copy.*\.codex/skills.*\.cursor/skills.*\.gemini/skills'
+check "and the fault names the folders it read" 0 $?
+check "and the exit code names the skills" 1 "$code"
+rm -f "$err"
+
+
 echo
 echo "passed $pass, failed $fail"
 [ "$fail" -eq 0 ]

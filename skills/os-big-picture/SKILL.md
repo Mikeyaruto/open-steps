@@ -14,7 +14,8 @@ description: >-
 allowed-tools:
   - "Read(~/.claude/open-steps/**)"
   - "Edit(BIG-PICTURE.md)"
-  - "Bash(${CLAUDE_SKILL_DIR}/scripts/census.sh *)"
+  - "Write(BIG-PICTURE.md)"
+  - "Bash(bash ${CLAUDE_SKILL_DIR}/scripts/census.sh *)"
   - "Bash(git rev-parse --git-dir)"
   - "Bash(gh repo view *)"
   - "Bash(gh issue list *)"
@@ -53,7 +54,7 @@ or `Signal` back out of the file - only `Stage` and the queue carry forward.
 ## Step 2 - the census, measured by the script
 
 ```bash
-bash "${CLAUDE_SKILL_DIR}/scripts/census.sh" .
+bash ${CLAUDE_SKILL_DIR}/scripts/census.sh .
 ```
 
 Outside Claude Code `${CLAUDE_SKILL_DIR}` is usually not set, so that path

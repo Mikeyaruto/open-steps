@@ -7,8 +7,7 @@
 **Skills that keep development open to the person running it: the sessions,
 the decisions, the next steps, the whole picture, all in plain language.**
 
-Plain-language agent skills, built and measured on Claude Code. They also
-install on Codex, Cursor and Gemini CLI.
+Plain-language agent skills for Claude Code, Codex, Cursor and Gemini CLI.
 
 By [Pavlo Kharmanskyi](https://github.com/kharmanskyi).
 
@@ -198,16 +197,15 @@ rather than read: [`docs/other-agents.md`](docs/other-agents.md).
 
 ### What was run on each tool
 
-Activation is measured on Claude Code so far; runners for the other tools are
-open issues:
-[#39](https://github.com/kharmanskyi/open-steps/issues/39) Codex,
+Activation is measured on Claude Code and on Codex CLI; runners for the other
+tools are open issues:
 [#40](https://github.com/kharmanskyi/open-steps/issues/40) Cursor,
 [#38](https://github.com/kharmanskyi/open-steps/issues/38) Gemini CLI.
 
 | | Skills install | Routing block | Session-start hook | Stop hook | Switches on by itself | Premortem fresh agent |
 |---|---|---|---|---|---|---|
 | Claude Code | watched: plugin install from a clean empty account | in place in the measured runs | watched, wired by the plugin; on in the measured runs | watched, wired by the plugin; off in the measured runs | measured, 2026-09-12: Haiku 4.5 85%, Sonnet 5 98%, Opus 5 100% | measured, 2026-09-14: 9 of 9 runs on Sonnet 5, 8 of 9 on Opus 5 |
-| Codex | watched: listed on Codex CLI 0.145, 2026-08-25 (OS not recorded) | from Codex's docs | checked by hand on test input | checked by hand on test input | not measured (#39) | watched: did not start in 4 runs, and all 4 wrongly called the review independent; Codex CLI 0.151, Linux |
+| Codex | watched: listed on Codex CLI 0.145, 2026-08-25 (OS not recorded), and read in the measured runs on 0.157.1 | from Codex's docs; in place in the measured runs | checked by hand on test input | checked by hand on test input | measured, 2026-09-28: the right skill read in 75 of 75 runs, first in 70; Codex CLI 0.157.1, model asked for: gpt-6-sol, Linux ([details](#on-codex-cli)) | watched: did not start in 4 runs, and all 4 wrongly called the review independent; Codex CLI 0.151, Linux. Not measured on 0.157.1 |
 | Cursor CLI | watched: 2026.09.02, Windows 11 | from Cursor's docs | watched: 2026.09.02, Windows 11 | watched: asks, cannot require; 2026.09.02, Windows 11 | not measured (#40) | not tried |
 | Gemini CLI | watched: 0.58.0, Windows 11 | watched in place: 0.58.0, Windows 11; not seen steering a skill | watched: 0.58.0, Windows 11 | watched: refuses on `AfterAgent`; 0.58.0, Windows 11 | not measured (#38) | not tried |
 
@@ -216,12 +214,10 @@ Windows 11; the maintainer has not reproduced them. "Checked by hand on test
 input" means the Codex hook scripts were fed Codex-shaped input
 (`hooks/test.sh` CASE 9); Codex running them in a live session has not been
 watched. The Codex listing on 2026-08-25 covered the six skills the pack had
-then; it (PR #1) and the Codex premortem runs (PR #29) were contributors' runs
-too. The Codex
-premortem check came before the skill's last two changes. Outside Claude Code
-no skill has been seen switching on from a user phrase: `os-done-or-not` ran
-on Cursor CLI and Gemini CLI when the stop hook asked for it, and
-`os-what-could-go-wrong` ran four times on Codex CLI 0.151.
+then; it (PR #1), the Codex premortem runs (PR #29) and the Codex activation
+runs (PR #42) were contributors' runs too. The Codex
+premortem check came before the skill's last two changes. On Cursor CLI and Gemini
+CLI no skill has been seen switching on from a phrase yet: `os-done-or-not` ran there when the stop hook asked for it.
 
 ## The skills
 
@@ -292,8 +288,9 @@ from then on.
 
 ## Numbers
 
-These numbers are for Claude Code with Claude models. Runners for the other
-tools are open issues: [#39](https://github.com/kharmanskyi/open-steps/issues/39) Codex, [#40](https://github.com/kharmanskyi/open-steps/issues/40) Cursor,
+The table and the chart below are for Claude Code with Claude models. Codex
+CLI has its own part at the end of this section, [On Codex CLI](#on-codex-cli).
+Runners for Cursor and Gemini CLI are open issues: [#40](https://github.com/kharmanskyi/open-steps/issues/40) Cursor,
 [#38](https://github.com/kharmanskyi/open-steps/issues/38) Gemini CLI.
 
 The pack tells the agent to separate what it measured from what it assumed.
@@ -373,7 +370,7 @@ to look: [`cases.md`](evals/cases.md) is every phrase we ask,
 miss above has a row you can read. The scorer writes that file; I don't type
 it. Scoring is a plain script reading tool calls, with no AI judging anything.
 Re-run it with `bash evals/run.sh`, or `EVAL_MODEL=opus bash evals/run.sh` for
-another model. `EVAL_AGENT` picks the tool: Claude Code's runner ships in
+another model. `EVAL_AGENT` picks the tool: the runners for Claude Code and Codex CLI ship in
 `evals/agents/`, and a runner for another tool follows the contract in
 [`evals/README.md`](evals/README.md#measuring-another-agent), "Measuring
 another agent".
@@ -386,6 +383,42 @@ for the current one. The session-start hook adds its injection
 on top, capped by `OPEN_STEPS_MAX_REPORT_LINES`. On Claude Code, installing
 works from a clean empty account, with both hooks connected. `claude plugin validate
 --strict` passes.
+
+### On Codex CLI
+
+On 2026-09-28 a contributor ran the same 25 phrases and 3 off-topic questions
+on Codex CLI 0.157.1, three times each, on Linux, with the pack installed as
+[`docs/other-agents.md`](docs/other-agents.md) describes. The model asked for
+was gpt-6-sol; Codex's output does not name the model that answered. Codex has no skill
+tool, so there a skill counts as switched on when the agent reads its
+`SKILL.md`, as the runner [`evals/agents/codex.sh`](evals/agents/codex.sh)
+defines it.
+
+| On Codex CLI 0.157.1 | Runs |
+|---|---|
+| The right skill was read | 75/75 |
+| The right skill was read first | 70/75 |
+| The right skill was the only one read | 23/75 |
+| A skill was read on an off-topic question | 0/9 |
+
+- Read is not the same as read alone. In 52 runs the agent read other skills
+  too, and in 37 of those the pack's own rules ask for that other skill as
+  well, for example `os-step-by-step` when the reply asks you to act. In 4
+  `os-done-or-not` runs it read `os-big-picture` first, and in 1
+  `os-step-by-step` run it read `os-ask-simple` first.
+- These are the contributor's runs and my scoring. The scorer gives the first
+  and last rows, in `evals/results-codex.md`; I counted the other two from the
+  same 84 transcripts, and an independent re-read of every run agreed. I did
+  not re-run them.
+- Only switching on was measured, not the quality of the answers and not the
+  premortem. In the nine runs of the three premortem phrases the agent waited
+  on something it had handed off, but no transcript shows a fresh agent
+  starting. Five of the nine were cut off at the runner's four-minute limit,
+  so how they would have ended is not known.
+- The runs read the `os-big-picture` instructions of release 0.4.4. Its
+  description, the part Codex lists before a skill is opened, is the same now.
+- One sweep on one machine, three runs per phrase: a smoke test, like the
+  Claude Code numbers. Phrase by phrase: [`evals/results-codex.md`](evals/results-codex.md).
 
 ## How the pack is built
 
@@ -433,7 +466,8 @@ Three decisions shape everything here:
 1. **Descriptions are commands, not summaries.** The skill descriptions
    open with "ALWAYS invoke this skill…". With this form the skills switched on
    in 98-100% of the test runs on Sonnet 5 and Opus 5 and 85% on Haiku 4.5 (25
-   phrases, Claude Code, 2026-09-12); the evals do not compare it with other wordings. See
+   phrases, Claude Code, 2026-09-12), and on Codex CLI 0.157.1 the agent read
+   the right skill's file in 75 of 75 runs (2026-09-28, see [On Codex CLI](#on-codex-cli)); the evals do not compare it with other wordings. See
    [Numbers](#numbers).
 2. **A skill cannot force itself to run.** Anything that must hold in each
    reply lives in the tool's standing instructions file (`CLAUDE.md`,
@@ -500,7 +534,8 @@ the handover to its fresh agent, and its plain language rests on
 review to a fresh agent: 9 of 9 runs on Sonnet 5 and 8 of 9 on Opus 5
 (2026-09-14). On Codex CLI 0.151 no fresh agent started in four runs and the
 agent ran the review itself; that check came before the skill's last two
-changes.
+changes. Whether a fresh agent starts on Codex CLI 0.157.1 is not
+measured.
 
 ## Open source
 

@@ -412,6 +412,8 @@ check "the scorer labels the Codex column by its models.md row" yes \
   "$(has "$out" '| Skill | GPT-6 Sol (Codex) |')"
 check "a run that opened the skill asked for is a hit, and one that opened only another a miss" yes \
   "$(has "$out" '| `os-done-or-not` | 1/2 |')"
+check "a day with no quality or premortem runs says both were not run" 2 "$(count "$out" -x 'Not run.')"
+check "a column from another tool says where its meaning is defined" yes "$(has "$out" 'defined in that runner')"
 
 echo
 echo "$pass passed, $fail failed"

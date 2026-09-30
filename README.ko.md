@@ -31,7 +31,7 @@
 
 ## 설치
 
-이 팩은 Claude Code에서 만들고 측정했습니다. Claude Code에서는 플러그인이 명령 한 번으로 스킬과 두 훅을 연결합니다. 스킬은 Codex, Cursor, Gemini CLI에도 설치됩니다. 복사 명령 하나로 스킬이 설치되고, 훅은 도구마다 설정 몇 줄이 필요합니다. [다른 에이전트](docs/other-agents.md)를 보세요 (영어).
+Claude Code에서는 플러그인이 명령 한 번으로 스킬과 두 훅을 연결합니다. 스킬은 Codex, Cursor, Gemini CLI에도 설치됩니다. 복사 명령 하나로 스킬이 설치되고, 훅은 도구마다 설정 몇 줄이 필요합니다. [다른 에이전트](docs/other-agents.md)를 보세요 (영어).
 
 저장소를 내려받습니다:
 

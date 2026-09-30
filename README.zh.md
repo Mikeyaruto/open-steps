@@ -31,7 +31,7 @@
 
 ## 安装
 
-这个技能包在 Claude Code 上构建和测量，在那里一个插件用一条命令接好技能和两个钩子。技能也可以装进 Codex、Cursor 和 Gemini CLI：一条复制命令装好技能，钩子则需要为每个工具写几行设置，见[其他智能体](docs/other-agents.md)（英文）。
+在 Claude Code 上，一个插件用一条命令接好技能和两个钩子。技能也可以装进 Codex、Cursor 和 Gemini CLI：一条复制命令装好技能，钩子则需要为每个工具写几行设置，见[其他智能体](docs/other-agents.md)（英文）。
 
 下载仓库：
 

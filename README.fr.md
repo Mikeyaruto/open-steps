@@ -31,7 +31,7 @@ L'agent répond dans la langue dans laquelle vous lui parlez. Le code, les noms 
 
 ## Installation
 
-Le paquet est construit et mesuré sur Claude Code ; là, un plugin branche les compétences et les deux hooks en une commande. Les compétences s'installent aussi dans Codex, Cursor et Gemini CLI : une commande de copie les installe, et les hooks demandent quelques lignes de réglages par outil, voir [autres agents](docs/other-agents.md) (en anglais).
+Sur Claude Code, un plugin branche les compétences et les deux hooks en une commande. Les compétences s'installent aussi dans Codex, Cursor et Gemini CLI : une commande de copie les installe, et les hooks demandent quelques lignes de réglages par outil, voir [autres agents](docs/other-agents.md) (en anglais).
 
 Téléchargez le dépôt :
 

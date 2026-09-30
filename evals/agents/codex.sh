@@ -65,8 +65,8 @@ arm="$1" model="$2" prompt="$3"
 # The quality arms need what Codex does not have headless: a way to allow a
 # skill in one arm and turn every skill off in the other (claude.sh does it
 # with --allowedTools and --disable-slash-commands). The premortem phase runs
-# with the "with" arm, so it is left out too, and issue #39 asks for the
-# activation and off-topic runs only.
+# with the "with" arm, so it is left out too, and issue #39, closed by PR #42,
+# asked for the activation and off-topic runs only.
 case "$arm" in
   plain) ;;
   *) echo "codex.sh: the $arm arm is not run on Codex; use EVAL_ONLY=\"activation negatives\"" >&2

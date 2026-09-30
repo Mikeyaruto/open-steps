@@ -38,10 +38,11 @@ to change something, seven rules cover it.
    `references/`. The measured half of `os-big-picture` moved into
    `scripts/census.sh` for exactly this reason, and got tests out of it.
 
-Writing a runner so the evals can measure another tool (issues #38, #39,
-#40)? The contract is in
+Writing a runner so the evals can measure another tool (issues #38 Gemini
+CLI, #40 Cursor)? The contract is in
 [`evals/README.md`](evals/README.md#measuring-another-agent), section
-"Measuring another agent".
+"Measuring another agent". `evals/agents/codex.sh`, the Codex CLI runner from
+PR #42, is a worked example for a tool with no skill tool.
 
 Testing the hooks: `bash hooks/test.sh` puts both of them through its
 scenarios in throwaway repositories, two of them through the adapter (Cursor, then

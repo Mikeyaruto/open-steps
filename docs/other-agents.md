@@ -1,6 +1,6 @@
 # Running the pack on Codex, Cursor and Gemini CLI
 
-Claude Code is what the pack is built and measured on. This page is the
+Claude Code is where the pack is measured most. This page is the
 second-best case: the skills install from one shared folder, the routing block
 goes into each tool's own instructions file, and the hooks carry over through
 one adapter on Cursor CLI and Gemini CLI, where a contributor ran them live on
@@ -34,6 +34,9 @@ literal text and the skill's own fallback worked: Codex read
 All four runs called the review independent anyway, one wrote the whole report
 twice, and one skipped a step the others took. That check came before the
 skill's last two changes (7c87cdb, a61b0d6), and has not been re-run since.
+Codex CLI 0.157.1 has not been checked for this: in a contributor's activation
+runs on it the agent waited on something it had handed off, but no transcript
+shows a fresh agent starting.
 
 In the same Codex CLI 0.151 check, a fresh process was reachable, but not on
 defaults. A nested `codex exec` failed to initialize inside the sandbox; the
@@ -61,9 +64,10 @@ folder is the one that was run.
 The block in [`routing-block.md`](routing-block.md) is meant to do the same job
 here as in `CLAUDE.md`: turn the moments it names into an obligation rather
 than a hint. Skills are model-invoked in each of these tools, so it is worth
-adding. Whether it steers a skill outside Claude Code has not been seen yet: on
-Gemini CLI it was in place during the contributor's live run, and the Codex
-and Cursor paths below come from those tools' documentation.
+adding. Whether it steers a skill outside Claude Code has not been measured on its
+own: it was in place during a contributor's live run on Gemini CLI and during
+the measured runs on Codex CLI 0.157.1, with no run without it to compare.
+The Cursor path below comes from Cursor's documentation.
 
 One command per tool, from the folder holding the clone, safe to re-run:
 
@@ -349,7 +353,10 @@ codex debug prompt-input | grep -o 'os-[a-z-]*' | sort -u
 
 listed all six skills the pack had then (2026-08-25), reaching the model with
 their descriptions intact; this is also where the symlink naming difference
-above turned up. It has not been re-run since.
+above turned up. That listing has not been re-run since; in the
+measured runs on Codex CLI 0.157.1 (2026-09-28) the agent read every one of
+the pack's skills when asked a matching question (`os-big-picture` as of
+release 0.4.4, with the same description as now).
 
 Both hooks were then fed a Codex-shaped payload directly:
 
@@ -362,9 +369,15 @@ printf '%s' "$payload" | hooks/stop-report.sh      # exits 2, report request on 
 The second one needs an uncommitted change in the repository to have anything
 to report. `hooks/test.sh` covers this shape as CASE 9, so it stays covered.
 
-Not run: hooks firing inside a live Codex session, which needs a real turn
-rather than a rendered prompt. The trust step above is read from Codex's hook
-documentation, not from watching it happen.
+Not watched: hooks firing inside a live Codex session. The activation runs of
+2026-09-28 were real turns, but they recorded which skills were read, not the
+hooks. The trust step above is read from Codex's hook documentation, not from
+watching it happen.
+
+Measured on Codex CLI 0.157.1, 2026-09-28, in a contributor's runs that the
+maintainer re-scored but did not re-run: whether the right skill switches on
+by itself. The numbers and what they mean are in the README,
+[On Codex CLI](../README.md#on-codex-cli).
 
 The Cursor CLI and Gemini CLI runs below are one contributor's; the maintainer
 has not reproduced them.
@@ -442,11 +455,11 @@ individual accounts on this version at the time.
 
 ## What does not come across
 
-- **Activation is measured on Claude Code with Claude models so far.** The
-  figures in the README say nothing about how reliably these skills switch on
-  inside another tool. No figure is quoted for those because none was
-  measured. Runners for Codex, Cursor and Gemini CLI are open issues: #39
-  Codex, #40 Cursor, #38 Gemini CLI.
+- **Activation is measured on Claude Code and on Codex CLI.** On Codex CLI
+  0.157.1 the right skill was read in 75 of 75 runs, first in 70; the details
+  and caveats are in the README, [On Codex CLI](../README.md#on-codex-cli).
+  For Cursor and Gemini CLI no figure is quoted because none was measured;
+  their runners are open issues: #40 Cursor, #38 Gemini CLI.
 - **Codex may shorten the descriptions.** Per Codex's skills documentation
   (https://developers.openai.com/codex/skills/, read 2026-09-27), the
   skills catalog gets at most 2% of the context window (8,000 characters when

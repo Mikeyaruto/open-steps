@@ -270,7 +270,7 @@ The numbers in brackets point to the notes under the table.
 | | Skills install | Routing block | Session-start hook | Stop hook | Switches on by itself | Premortem starts a fresh agent |
 |---|---|---|---|---|---|---|
 | Claude Code | watched (1) | in place (2) | watched (2) | watched (2) | measured: 85% to 100% (3) | measured: 9/9 and 8/9 (4) |
-| Codex CLI | watched (5) | from docs, in place (6) | checked by hand (7) | checked by hand (7) | measured: right skill read in 75 of 75, first in 70 (8) | did not start (9) |
+| Codex CLI | watched (5) | from docs, in place (6) | checked by hand (7) | checked by hand (7) | measured: right skill read in 75 of 75, first in 70 (8) | did not start on 0.151 (9) |
 | Cursor CLI | watched (10) | from docs | watched (10) | watched: asks, cannot require (10, 11) | not measured (12) | not tried |
 | Gemini CLI | watched (10) | in place (10, 13) | watched (10) | watched: can refuse (10, 14) | not measured (12) | not tried |
 
@@ -281,7 +281,9 @@ The numbers in brackets point to the notes under the table.
 3. 2026-09-12, 25 phrases, 3 runs each: Haiku 4.5 85%, Sonnet 5 98%, Opus 5
    100%. See [Numbers](#numbers).
 4. 2026-09-14: the fresh agent started in 9 of 9 runs on Sonnet 5 and in 8 of
-   9 on Opus 5.
+   9 on Opus 5. The skill's wording changed on 2026-09-30, after this
+   measurement: it now says what to do where no fresh agent can start. Its
+   steps on Claude Code are the same.
 5. A contributor listed the skills on Codex CLI 0.145 on 2026-08-25 (OS not
    recorded). That listing came before `os-what-could-go-wrong` and
    `os-big-picture` were added. In the measured runs on 0.157.1 every skill
@@ -295,7 +297,7 @@ The numbers in brackets point to the notes under the table.
    scored by the maintainer. See [On Codex CLI](#on-codex-cli).
 9. Codex CLI 0.151 on Linux, 4 runs by a contributor. No fresh agent started.
    The agent ran the review itself, and all 4 runs wrongly called the review
-   independent. This check came before the skill's last two changes. It is not
+   independent. This check came before later changes to the skill. It is not
    measured on 0.157.1. In the 0.157.1 activation runs no transcript shows one
    starting, but 5 of 9 were cut off. See [On Codex CLI](#on-codex-cli).
 10. Every Cursor CLI and Gemini CLI cell: Cursor CLI 2026.09.02 and Gemini

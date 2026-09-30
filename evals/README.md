@@ -33,10 +33,11 @@ scripts in between, and a check that keeps the scripts honest.
   below is the contract such a script keeps.
 - **Every run is headless, so nobody answers a permission prompt.** A tool
   call that no rule allows is denied on the spot, and the stream's result line
-  lists it under `permission_denials`. On Claude Code, `agents/claude.sh` sets two rules and
-  no blanket bypass. Every Claude Code run loses `SendMessage` and `ListAgents`, the tools that reach
-  the other Claude sessions on this machine: a bare tool name in a deny rule
-  takes the tool out of the model's view. The two quality arms, and only
+  lists it under `permission_denials`. On Claude Code, `agents/claude.sh` sets
+  two rules and no blanket bypass. Every Claude Code run loses `SendMessage`
+  and `ListAgents`, the tools that reach the other Claude sessions on this
+  machine: a bare tool name in a deny rule takes the tool out of the model's
+  view. The two quality arms, and only
   those, may call the `Skill` tool, so the `with` arm really answers with the
   pack loaded. The activation runs get nothing extra: the scorer counts the
   call, which the model makes before it is denied, and that count is the
@@ -72,8 +73,9 @@ scripts in between, and a check that keeps the scripts honest.
   Codex's stream does not name the model that answered, so a Codex column is
   labelled by the model that was asked for.
 - **The transcripts stay out of the repository.** One measurement is one run of
-  the agent, so a full pass over every phrase on three models is 234 runs and
-  12 MB of logs. They go to `~/.claude/open-steps/evals/<day>/`, next to where
+  the agent. Each case in `cases.md` runs `N_RUNS` times (3 by default) on each
+  model, so a full pass on three models is a few hundred runs and more than
+  10 MB of logs. They go to `~/.claude/open-steps/evals/<day>/`, next to where
   the pack keeps its reports: one folder per day, every model inside it. To see
   what the agent actually answered, open that one file.
 
@@ -108,9 +110,9 @@ Scoring a partial day or a foreign branch without the flag leaves the main
 README exactly as it was.
 
 Pointed at the evals folder instead of one day, the scorer takes each part
-from the newest day that holds it - activation, the off-topic phrases and the
-quality arms from one day, the premortem briefs from another - and every
-section says which day it came from. That is how a part re-measured on its
+from the newest day that holds it: activation, the off-topic phrases and the
+quality arms from one day, the premortem briefs from another. Every section
+says which day it came from. That is how a part re-measured on its
 own with `EVAL_ONLY` lands in `results.md` without paying for the rest again
 (keep another tool's day out of that folder, or score it on its own as
 "Measuring another agent" says, since the newest day's activation wins):
@@ -131,8 +133,8 @@ bash evals/test.sh
 
 `run.sh` decides what to ask and when; one script per tool does the asking.
 Claude Code's is `agents/claude.sh`, and Codex CLI's is `agents/codex.sh`.
-`EVAL_AGENT` picks another by name from the same folder, or by path while it is still being written, and the model
-names are then that tool's own:
+`EVAL_AGENT` picks another by name from the same folder, or by path while it
+is still being written, and the model names are then that tool's own:
 
 ```bash
 EVAL_AGENT=codex EVAL_MODEL=gpt-6-sol EVAL_ONLY="activation negatives" bash evals/run.sh
@@ -162,8 +164,9 @@ A runner is one executable file that keeps five promises.
 3. **Its header says what counts as opening a skill on that tool**, the one
    judgment in the file. On Claude Code it is a call of the `Skill` tool. On a
    tool that loads a skill by reading its `SKILL.md`, it is that read; on one
-   with an activation tool, that call. A number in `results.md` or `results-<agent>.md`
-   means what the header says and no more, so the header is part of the measurement.
+   with an activation tool, that call. A number in `results.md` or
+   `results-<agent>.md` means what the header says and no more, so the header
+   is part of the measurement.
 4. **It changes nothing else.** The phrases stay in `cases.md`, the scoring
    stays mechanical, the transcripts stay out of the repository.
 5. **It arrives with its row in `models.md`**, written `agent:model` the way
@@ -175,9 +178,9 @@ A runner is one executable file that keeps five promises.
 arguments arrive in order, the auth check goes through the runner too, the
 stream files carry the agent's name, and a Claude model id under another
 agent never wears a Claude tier name. CASE 13 puts the Codex runner through a
-stand-in `codex` that answers in the shape `codex exec --json` writes. Try a new runner the same way before
-the first paid run, then with one real phrase. A day measured through it
-is scored on its own, never into `results.md`:
+stand-in `codex` that answers in the shape `codex exec --json` writes. Try a
+new runner the same way before the first paid run, then with one real phrase.
+A day measured through it is scored on its own, never into `results.md`:
 `python3 evals/score.py --print <that day> > evals/results-<agent>.md`, as
 `results-codex.md` was. A pull request that adds a runner hands its
 transcripts over separately, and the maintainer scores them.
@@ -271,14 +274,14 @@ We found these by running it, not by reading about it.
   object.** Headless runs get no permission prompt, so a `Skill` call nobody
   allowed is denied, and the stream carries these lines. Reading `.content` off
   one raised, and a single such line ended the whole day's scoring. The model
-  still chose the skill, so activation was unaffected - but the quality arm
-  was: with the pack's skills denied, the `with` arm ran unaided too, and those
-  columns said nothing. Since 2026-09-12 the two quality arms may call `Skill`
-  (measured on Claude Code 2.1.222: the call runs and `permission_denials`
-  stays empty), and the scorer prints "not measured" for a model whose
-  with-runs never had a skill loaded, saying whether the call was denied or
-  never made. The two earlier days now read that way, and the next scored day
-  replaces their table in `results.md`.
+  still chose the skill, so activation was unaffected. The quality arm was
+  not: with the pack's skills denied, the `with` arm ran unaided too, and
+  those columns said nothing. Since 2026-09-12 the two quality arms may call
+  `Skill` (measured on Claude Code 2.1.222: the call runs and
+  `permission_denials` stays empty), and the scorer prints "not measured"
+  for a model whose with-runs never had a skill loaded, saying whether the
+  call was denied or never made. The two earlier days now read that way, and
+  the next scored day replaces their table in `results.md`.
 - **The `os-check-work` phrases could reach real sessions.** `run.sh` gives
   each run a throwaway repository, but until 2026-09-12 not a throwaway session
   namespace: a run asked "how are the other sessions doing?" could list the
@@ -288,8 +291,8 @@ We found these by running it, not by reading about it.
   nothing broke, but a person watching their own session saw the
   interruptions. Now every run starts without `SendMessage` and `ListAgents`,
   and `results.md` counts it: "Runs sealed off from other sessions" says how
-  many streams of the day list neither tool. The skill is still chosen -
-  measured on 2026-09-12, the phrase still calls `os-check-work` - it just has
+  many streams of the day list neither tool. The skill is still chosen:
+  measured on 2026-09-12, the phrase still calls `os-check-work`. It just has
   nobody to reach. Days measured before that show 0 of N on that line.
 - **A model can decline to dispatch the fresh agent, and the skill is not the
   reason.** On 2026-09-13 Opus 5 wrote the premortem itself in four of nine
@@ -297,7 +300,7 @@ We found these by running it, not by reading about it.
   session's instructions forbid the Agent tool unless asked for; Sonnet 5 and
   Haiku 4.5 dispatched in every run.
   The likeliest source is a global instruction on that machine against
-  creating subagents ahead of need, which a headless run inherits - a
+  creating subagents ahead of need, which a headless run inherits. That is a
   candidate, not a proven cause. The "fresh agent" column exists so this shows
   as a count, instead of hiding inside a report that reads like any other.
   Judge a model's premortem by the runs where that column says the agent ran.

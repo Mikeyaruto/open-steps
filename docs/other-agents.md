@@ -12,7 +12,7 @@ the wiring differs. Setup has four parts:
 4. Check the install with `doctor.sh`.
 
 What was run on each tool is summed up in the README, in
-[What was run on each tool](../README.md#what-was-run-on-each-tool). The runs
+[What was run on each tool](../evals/README.md#what-was-run-on-each-tool). The runs
 themselves are described under [What was actually run](#what-was-actually-run).
 Where a step comes from a tool's documentation and was not run, this page says
 so next to the step.
@@ -98,7 +98,7 @@ tools differ in what they do with the answer:
 
 Whether each cell was watched, checked by hand or read in the documentation is
 in the README table,
-[What was run on each tool](../README.md#what-was-run-on-each-tool).
+[What was run on each tool](../evals/README.md#what-was-run-on-each-tool).
 
 The settings are the same on every tool, because the scripts read them, not
 the tool: `OPEN_STEPS_COOLDOWN`, `OPEN_STEPS_MIN_FILES`,
@@ -418,7 +418,7 @@ On Codex CLI 0.157.1, on 2026-09-28, a contributor measured whether the right
 skill switches on by itself, and the maintainer scored the transcripts. The
 agent read every skill of the pack when asked a matching question. The
 numbers and what they mean are in the README,
-[On Codex CLI](../README.md#on-codex-cli). In those runs the agent waited on
+[On Codex CLI](../evals/README.md#on-codex-cli). In those runs the agent waited on
 work it had handed off, but no transcript shows a fresh agent starting, and 5
 of the 9 transcripts were cut off.
 
@@ -500,7 +500,7 @@ gemini-3.5-flash-lite, headless and untrusted, without the setting that lets
 the agent act on its own. In that mode Gemini CLI did not register its skill
 tool, so every one of the 56 skill calls came back "tool not registered" and
 no skill's text reached the model. The numbers and what they mean are in the
-README, [On Gemini CLI](../README.md#on-gemini-cli).
+evals, [On Gemini CLI](../evals/README.md#on-gemini-cli).
 
 Not run: Gemini CLI on macOS or Linux, the project-level settings file, and
 Google sign-in.
@@ -511,8 +511,8 @@ Google sign-in.
   Codex CLI 0.157.1 the right skill was read in 75 of 75 runs, first in 70.
   On Gemini CLI 0.62.0 the right skill was called in 54 of 75 runs, and the
   other 21 reached for it by reading its file; headless, Gemini did not load
-  any skill. The details are in the README, [On Codex CLI](../README.md#on-codex-cli)
-  and [On Gemini CLI](../README.md#on-gemini-cli). On Cursor CLI no figure is
+  any skill. The details are in the evals, [On Codex CLI](../evals/README.md#on-codex-cli)
+  and [On Gemini CLI](../evals/README.md#on-gemini-cli). On Cursor CLI no figure is
   given, because none was measured; the only skill seen switching on there is
   `os-done-or-not`, when the stop hook asked for it. Its runner is an open
   issue: [#40](https://github.com/kharmanskyi/open-steps/issues/40).

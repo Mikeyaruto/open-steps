@@ -142,7 +142,8 @@ The skills are the same folders on every tool. On Claude Code a plugin
 installs them and wires both hooks in one command. On Codex CLI, Cursor CLI
 and Gemini CLI one copy command installs the skills, and each tool takes a few
 lines of hook settings. What was run on each tool, and what comes from its
-documentation, is under [What was run on each tool](#what-was-run-on-each-tool).
+documentation, is under
+[What was run on each tool](evals/README.md#what-was-run-on-each-tool).
 
 ### First, for any tool
 
@@ -251,96 +252,19 @@ for Cursor CLI: Claude Code 2.1.277 and later reads a project's `AGENTS.md`
 when the project has no `CLAUDE.md`, per its changelog. So the block reaches
 Claude Code in that project too.
 
-## What was run on each tool
-
-Each cell says how we know. The words mean:
-
-- **measured**: counted over repeated runs of the same test phrases.
-- **watched**: seen happening in a real session.
-- **checked by hand**: the hook scripts were fed test input, not seen in a
-  live session.
-- **from docs**: set up the way the tool's documentation says, not seen on its
-  own.
-- **in place**: present during the runs, its own effect not tested.
-- **did not start**: tried, and it did not happen.
-- **not measured** or **not tried**: no count was taken, or nobody has run it.
-
-The numbers in brackets point to the notes under the table.
-
-| | Skills install | Routing block | Session-start hook | Stop hook | Switches on by itself | Premortem starts a fresh agent |
-|---|---|---|---|---|---|---|
-| Claude Code | watched (1) | in place (2) | watched (2) | watched (2) | measured: 85% to 100% (3) | measured: 9/9 and 8/9 (4) |
-| Codex CLI | watched (5) | from docs, in place (6) | checked by hand (7) | checked by hand (7) | measured: right skill read in 75 of 75, first in 70 (8) | did not start on 0.151 (9) |
-| Cursor CLI | watched (10) | from docs | watched (10) | watched: asks, cannot require (10, 11) | not measured (12) | not tried |
-| Gemini CLI | watched (10) | in place (10, 13) | watched (10) | watched: can refuse (10, 14) | measured: right skill called in 54 of 75, the other 21 reached for it by reading its file (15) | not tried |
-
-1. Installed as a plugin from a clean, empty account, with both hooks
-   connected. `claude plugin validate --strict` passes.
-2. The plugin wires both hooks. In the measured runs the routing block was in
-   place, the session-start hook was on and the stop hook was off.
-3. 2026-09-12, 25 phrases, 3 runs each: Haiku 4.5 85%, Sonnet 5 98%, Opus 5
-   100%. See [Numbers](#numbers).
-4. 2026-09-14: the fresh agent started in 9 of 9 runs on Sonnet 5 and in 8 of
-   9 on Opus 5. The skill's wording changed on 2026-09-30, after this
-   measurement: it now says what to do where no fresh agent can start. Its
-   steps on Claude Code are the same.
-5. A contributor listed the skills on Codex CLI 0.145 on 2026-08-25 (OS not
-   recorded). That listing came before `os-what-could-go-wrong` and
-   `os-big-picture` were added. In the measured runs on 0.157.1 every skill
-   was read.
-6. Placed where Codex's docs say, and in place in the measured runs.
-7. The Codex hook scripts were fed Codex-shaped input, and the hook test suite
-   keeps that input as one of its cases. Nobody has watched Codex run them in a
-   live session.
-8. 2026-09-28, Codex CLI 0.157.1 on Linux, model asked for: gpt-6-sol. The
-   right skill was read in 75 of 75 runs, first in 70. One contributor's runs,
-   scored by the maintainer. See [On Codex CLI](#on-codex-cli).
-9. Codex CLI 0.151 on Linux, 4 runs by a contributor. No fresh agent started.
-   The agent ran the review itself, and all 4 runs wrongly called the review
-   independent. This check came before later changes to the skill. It is not
-   measured on 0.157.1. In the 0.157.1 activation runs no transcript shows one
-   starting, but 5 of 9 were cut off. See [On Codex CLI](#on-codex-cli).
-10. Every Cursor CLI and Gemini CLI cell: Cursor CLI 2026.09.02 and Gemini
-    CLI 0.58.0, on Windows 11, in one contributor's runs. The maintainer has
-    not reproduced them. The Cursor desktop app has not been tried.
-11. A stop cannot be blocked on Cursor CLI. So the report is asked for as a
-    follow-up message, not required. A run with no one at the keyboard
-    (`agent -p`) did not reach the stop hook.
-12. No skill has been seen switching on from a phrase on Cursor CLI yet.
-    There, `os-done-or-not` ran when the stop hook asked for it. Help wanted:
-    [#40](https://github.com/kharmanskyi/open-steps/issues/40) Cursor CLI.
-13. Watched in place on 0.58.0. It was not seen steering a skill.
-14. On Gemini CLI the stop hook can refuse, on `AfterAgent`. Gemini's file
-    tool cannot write outside the workspace. In a run with no one at the
-    keyboard, the report went to Gemini's own temp folder instead. So the
-    request now says to save the report with the shell tool. That sentence
-    went in after the run and was not itself watched.
-15. 2026-10-02, Gemini CLI 0.62.0 on Windows 11, model gemini-3.5-flash-lite.
-    Switching on means the agent called Gemini's skill tool with the right
-    skill's name: 54 of 75 runs. In the other 21 it tried to read the right
-    skill's file instead, which Gemini refused. Headless, Gemini did not
-    register the skill tool, so no skill's text reached the model in any run.
-    One contributor's runs, scored by the maintainer. See
-    [On Gemini CLI](#on-gemini-cli).
-
 ## Numbers
 
-The table and the chart below are for Claude Code with Claude models. Codex
-CLI and Gemini CLI have their own parts at the end of this section,
-[On Codex CLI](#on-codex-cli) and [On Gemini CLI](#on-gemini-cli). On Cursor
-CLI switching on is not measured, as
-[What was run on each tool](#what-was-run-on-each-tool) shows.
-
 The pack tells the agent to separate what it measured from what it assumed.
-Same rule for me.
+Same rule for me. Twenty-five phrases a person would actually say, each asked
+three times with no one at the keyboard, on three Claude models: did the right
+skill switch on by itself? Three off-topic questions, asked the same way,
+checked the opposite. Three runs per phrase is a smoke test, not a benchmark.
 
-Twenty-five phrases a person would actually say: three per skill, plus one
-that tests the line between `os-done-or-not` and `os-big-picture`. Each was
-asked three times, with no one at the keyboard, in a working installation, on
-three Claude models. The question every time: did the right skill switch on by
-itself? Three off-topic questions, each also asked three times, checked the
-opposite. Three runs per phrase is a smoke test, not a benchmark, and small
-numbers wobble.
+The chart and the table are Claude Code. The same phrases were run on Codex
+CLI and Gemini CLI by contributors, and what each tool counts as "switched
+on", what was run on every tool, and what the misses show are in
+[evals/README.md](evals/README.md#what-was-run-on-each-tool). Cursor CLI is
+not measured yet.
 
 ![Activation per skill on Haiku 4.5, Sonnet 5 and Opus 5](assets/activation.svg)
 
@@ -363,131 +287,18 @@ Measured on 2026-09-12.
 
 <!-- numbers: end -->
 
-What the misses show, because they matter more than the score.
-
-- On Sonnet 5 and Opus 5 this works. Four skills are perfect on every model,
-  and Opus missed nothing at all. Two of the four, `os-big-picture` and
-  `os-whats-next`, both answer questions about the project as a whole. So they
-  were the pair most likely to take each other's phrases. They did not.
-- `os-what-could-go-wrong` was the skill most likely to take phrases from
-  `os-ask-simple`, so it was measured before it went in: 27/27 on its own
-  phrases, `os-ask-simple` did not drop, and off-topic questions still left it
-  silent.
-- Sonnet 5 missed one run in seventy-five, on a step-by-step phrase. An
-  earlier round missed two runs of another phrase. Read both as run-to-run
-  wobble, smaller than Haiku's.
-- On Haiku 4.5, two skills are unreliable and a third dropped two runs. If you
-  run on the cheapest model, expect to type the skill name yourself sometimes.
-- Haiku also moves between runs. Four rounds of the same phrases have put
-  `os-step-by-step` at 50%, 33%, 44% and 44%, and off-topic questions that
-  pulled in a skill at zero, one and zero. I would rather say that than quote
-  the friendliest round.
-- Where Haiku misses, it usually asks a clarifying question first. Told "put
-  a secret on the server, tell me what to do", it wants to know which server
-  and which secret. The pack wants the agent to settle what it can before it
-  asks you, so asking which server first is close to what `os-step-by-step`
-  would do. A one-shot test, with no one to answer, scores it as a miss.
-- The test set is mine, and it is small. Twenty-five phrases in a repository
-  you can read, every one of them scored above, so write better ones and
-  re-run it.
-
-Two lessons from earlier rounds, for anyone writing their own phrases. A "not"
-inside a description ("this is NOT the skill for X") is ignored. So the line
-between two similar skills is drawn by removing a trigger, not by adding a
-warning. And a phrase with a false premise ("you said X" at the start of an
-empty session) is refused by the model, correctly. So a test phrase has to
-carry its own context. More in
-[What we learned by running it](evals/README.md#what-we-learned-by-running-it).
-
-Everything is in [`evals/`](evals/), and two files are enough if you just want
-to look: [`cases.md`](evals/cases.md) is every phrase we ask,
-[`results.md`](evals/results.md) is what came back, phrase by phrase, so every
-miss above has a row you can read. The scorer writes that file; I don't type
-it. Scoring is a plain script reading tool calls, with no AI judging anything.
-Re-run it with `bash evals/run.sh`, or `EVAL_MODEL=opus bash evals/run.sh` for
-another model. `EVAL_AGENT` picks the tool: the test scripts for Claude Code
-and Codex CLI ship in `evals/agents/`, and a script for another tool follows
-the contract in [Measuring another agent](evals/README.md#measuring-another-agent).
+Everything is in [`evals/`](evals/): [`cases.md`](evals/cases.md) is every
+phrase we ask, [`results.md`](evals/results.md) is what came back, phrase by
+phrase. The scorer writes that file; I don't type it. Scoring is a plain
+script reading tool calls, with no AI judging anything. Re-run it with
+`bash evals/run.sh`; `EVAL_AGENT` picks the tool, and a script for another
+tool follows the contract in
+[Measuring another agent](evals/README.md#measuring-another-agent).
 
 Also easy to check yourself: the pack's descriptions are always on, and Claude
 Code estimates their cost itself. Run `claude plugin details open-steps` for
 the current figure. The session-start hook adds its text on top: the routing
 table, and the last report, capped by `OPEN_STEPS_MAX_REPORT_LINES`.
-
-### On Codex CLI
-
-On 2026-09-28 a contributor ran the same 25 phrases and 3 off-topic questions
-on Codex CLI 0.157.1, three times each, on Linux, with the pack installed as
-[`docs/other-agents.md`](docs/other-agents.md) describes. The model asked for
-was gpt-6-sol; Codex's output does not name the model that answered. Codex has
-no skill tool, so there a skill counts as switched on when the agent reads its
-`SKILL.md`, as the test script [`evals/agents/codex.sh`](evals/agents/codex.sh)
-defines it.
-
-| On Codex CLI 0.157.1 | Runs |
-|---|---|
-| The right skill was read | 75/75 |
-| The right skill was read first | 70/75 |
-| The right skill was the only one read | 23/75 |
-| A skill was read on an off-topic question | 0/9 |
-
-- Read is not the same as read alone. In 52 runs the agent read other skills
-  too, and in 37 of those the pack's own rules ask for that other skill as
-  well, for example `os-step-by-step` when the reply asks you to act. In 4
-  `os-done-or-not` runs it read `os-big-picture` first, and in 1
-  `os-step-by-step` run it read `os-ask-simple` first.
-- These are the contributor's runs and my scoring. The scorer gives the first
-  and last rows, in `evals/results-codex.md`; I counted the other two from the
-  same 84 transcripts, and an independent re-read of every run agreed. I did
-  not re-run them.
-- Only switching on was measured, not the quality of the answers and not the
-  premortem. In the nine runs of the three premortem phrases the agent waited
-  on something it had handed off, but no transcript shows a fresh agent
-  starting. Five of the nine were cut off at the test script's four-minute
-  limit, so how they would have ended is not known.
-- The runs read the `os-big-picture` instructions of release 0.4.4. Its
-  description, the part Codex lists before a skill is opened, is the same now.
-- One round on one machine, three runs per phrase, so the smoke-test caution
-  above applies here too. Phrase by phrase:
-  [`evals/results-codex.md`](evals/results-codex.md).
-
-### On Gemini CLI
-
-On 2026-10-02 a contributor ran the same 25 phrases and 3 off-topic questions
-on Gemini CLI 0.62.0, three times each, on Windows 11 with a Gemini API key,
-model gemini-3.5-flash-lite, with the pack installed as
-[`docs/other-agents.md`](docs/other-agents.md) describes. Gemini CLI has a
-skill tool: it lists the installed skills to the model and loads one when the
-model calls that tool with its name. So there a skill counts as switched on
-when the agent makes that call, as the test script
-[`evals/agents/gemini-cli.sh`](evals/agents/gemini-cli.sh) defines it.
-
-| On Gemini CLI 0.62.0 | Runs |
-|---|---|
-| The right skill was called | 54/75 |
-| The right skill was reached for by reading its file instead | 21/75 |
-| Another skill was called | 0/75 |
-| A skill was called on an off-topic question | 0/9 |
-
-- Every miss went for the right skill. In all 21 the agent tried to read the
-  skill's `SKILL.md` instead of calling the skill tool, and Gemini refused the
-  read because the skills folder is outside the project. No run chose a wrong
-  skill, so the choice was right in 75 of 75; the tool call was made in 54.
-- No skill's text reached the model in any run. Headless, without the
-  setting that lets the agent act on its own, Gemini CLI 0.62.0 did not
-  register the skill tool, and all 56 calls came back "tool not registered".
-  The call is still the agent's choice, which is what this number counts, the
-  same way the Claude Code numbers count a skill call before it is allowed.
-  How the skills behave once loaded on Gemini CLI is not measured.
-- These are the contributor's runs and my scoring. The scorer gives the first
-  and last rows, in `evals/results-gemini-cli.md`; I counted the other two
-  from the same 84 transcripts and re-ran the conversion on every one. I did
-  not re-run them.
-- Only switching on was measured, not the quality of the answers and not the
-  premortem. Every run finished; none hit the time limit.
-- One round on one machine, three runs per phrase, so the smoke-test caution
-  above applies here too. Phrase by phrase:
-  [`evals/results-gemini-cli.md`](evals/results-gemini-cli.md).
 
 ## How the pack is built
 
@@ -544,9 +355,8 @@ These shape everything here:
 
 1. **Descriptions are commands, not summaries.** The skill descriptions open
    with "ALWAYS invoke this skill…". With this form the skills switched on in
-   the test runs shown under [Numbers](#numbers) and
-   [On Codex CLI](#on-codex-cli). The evals do not compare it with other
-   wordings.
+   the test runs shown under [Numbers](#numbers). The evals do not compare it
+   with other wordings.
 2. **A skill cannot force itself to run.** Anything that must hold in each
    reply lives in the tool's standing instructions file (`CLAUDE.md`,
    `AGENTS.md`, `GEMINI.md`) or, on Claude Code, the output style instead.
@@ -561,10 +371,9 @@ sentence. Borrow is the word. Nothing here is certified against the standard.
 
 ## Limits
 
-- Switching on is measured on Claude Code and Codex CLI only. Answer quality
-  and the premortem's fresh agent are measured on Claude Code only. What was
-  run on each tool is under
-  [What was run on each tool](#what-was-run-on-each-tool).
+- Answer quality and the premortem's fresh agent are measured on Claude Code
+  only. What was run on each tool is under
+  [What was run on each tool](evals/README.md#what-was-run-on-each-tool).
 - The output style does not reach subagents. So `os-what-could-go-wrong`
   carries its rules inside the handover to its fresh agent, and its plain
   language rests on

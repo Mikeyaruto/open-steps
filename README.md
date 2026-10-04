@@ -272,7 +272,7 @@ The numbers in brackets point to the notes under the table.
 | Claude Code | watched (1) | in place (2) | watched (2) | watched (2) | measured: 85% to 100% (3) | measured: 9/9 and 8/9 (4) |
 | Codex CLI | watched (5) | from docs, in place (6) | checked by hand (7) | checked by hand (7) | measured: right skill read in 75 of 75, first in 70 (8) | did not start on 0.151 (9) |
 | Cursor CLI | watched (10) | from docs | watched (10) | watched: asks, cannot require (10, 11) | not measured (12) | not tried |
-| Gemini CLI | watched (10) | in place (10, 13) | watched (10) | watched: can refuse (10, 14) | not measured (12) | not tried |
+| Gemini CLI | watched (10) | in place (10, 13) | watched (10) | watched: can refuse (10, 14) | measured: right skill called in 54 of 75, the other 21 reached for it by reading its file (15) | not tried |
 
 1. Installed as a plugin from a clean, empty account, with both hooks
    connected. `claude plugin validate --strict` passes.
@@ -306,23 +306,30 @@ The numbers in brackets point to the notes under the table.
 11. A stop cannot be blocked on Cursor CLI. So the report is asked for as a
     follow-up message, not required. A run with no one at the keyboard
     (`agent -p`) did not reach the stop hook.
-12. No skill has been seen switching on from a phrase on these two tools yet.
+12. No skill has been seen switching on from a phrase on Cursor CLI yet.
     There, `os-done-or-not` ran when the stop hook asked for it. Help wanted:
-    [#40](https://github.com/kharmanskyi/open-steps/issues/40) Cursor CLI,
-    [#38](https://github.com/kharmanskyi/open-steps/issues/38) Gemini CLI.
+    [#40](https://github.com/kharmanskyi/open-steps/issues/40) Cursor CLI.
 13. Watched in place on 0.58.0. It was not seen steering a skill.
 14. On Gemini CLI the stop hook can refuse, on `AfterAgent`. Gemini's file
     tool cannot write outside the workspace. In a run with no one at the
     keyboard, the report went to Gemini's own temp folder instead. So the
     request now says to save the report with the shell tool. That sentence
     went in after the run and was not itself watched.
+15. 2026-10-02, Gemini CLI 0.62.0 on Windows 11, model gemini-3.5-flash-lite.
+    Switching on means the agent called Gemini's skill tool with the right
+    skill's name: 54 of 75 runs. In the other 21 it tried to read the right
+    skill's file instead, which Gemini refused. Headless, Gemini did not
+    register the skill tool, so no skill's text reached the model in any run.
+    One contributor's runs, scored by the maintainer. See
+    [On Gemini CLI](#on-gemini-cli).
 
 ## Numbers
 
 The table and the chart below are for Claude Code with Claude models. Codex
-CLI has its own part at the end of this section,
-[On Codex CLI](#on-codex-cli). On Cursor CLI and Gemini CLI switching on is
-not measured, as [What was run on each tool](#what-was-run-on-each-tool) shows.
+CLI and Gemini CLI have their own parts at the end of this section,
+[On Codex CLI](#on-codex-cli) and [On Gemini CLI](#on-gemini-cli). On Cursor
+CLI switching on is not measured, as
+[What was run on each tool](#what-was-run-on-each-tool) shows.
 
 The pack tells the agent to separate what it measured from what it assumed.
 Same rule for me.
@@ -443,6 +450,44 @@ defines it.
 - One round on one machine, three runs per phrase, so the smoke-test caution
   above applies here too. Phrase by phrase:
   [`evals/results-codex.md`](evals/results-codex.md).
+
+### On Gemini CLI
+
+On 2026-10-02 a contributor ran the same 25 phrases and 3 off-topic questions
+on Gemini CLI 0.62.0, three times each, on Windows 11 with a Gemini API key,
+model gemini-3.5-flash-lite, with the pack installed as
+[`docs/other-agents.md`](docs/other-agents.md) describes. Gemini CLI has a
+skill tool: it lists the installed skills to the model and loads one when the
+model calls that tool with its name. So there a skill counts as switched on
+when the agent makes that call, as the test script
+[`evals/agents/gemini-cli.sh`](evals/agents/gemini-cli.sh) defines it.
+
+| On Gemini CLI 0.62.0 | Runs |
+|---|---|
+| The right skill was called | 54/75 |
+| The right skill was reached for by reading its file instead | 21/75 |
+| Another skill was called | 0/75 |
+| A skill was called on an off-topic question | 0/9 |
+
+- Every miss went for the right skill. In all 21 the agent tried to read the
+  skill's `SKILL.md` instead of calling the skill tool, and Gemini refused the
+  read because the skills folder is outside the project. No run chose a wrong
+  skill, so the choice was right in 75 of 75; the tool call was made in 54.
+- No skill's text reached the model in any run. Headless, without the
+  setting that lets the agent act on its own, Gemini CLI 0.62.0 did not
+  register the skill tool, and all 56 calls came back "tool not registered".
+  The call is still the agent's choice, which is what this number counts, the
+  same way the Claude Code numbers count a skill call before it is allowed.
+  How the skills behave once loaded on Gemini CLI is not measured.
+- These are the contributor's runs and my scoring. The scorer gives the first
+  and last rows, in `evals/results-gemini-cli.md`; I counted the other two
+  from the same 84 transcripts and re-ran the conversion on every one. I did
+  not re-run them.
+- Only switching on was measured, not the quality of the answers and not the
+  premortem. Every run finished; none hit the time limit.
+- One round on one machine, three runs per phrase, so the smoke-test caution
+  above applies here too. Phrase by phrase:
+  [`evals/results-gemini-cli.md`](evals/results-gemini-cli.md).
 
 ## How the pack is built
 

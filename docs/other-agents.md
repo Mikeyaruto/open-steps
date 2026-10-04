@@ -493,19 +493,29 @@ tool was refused for the reports folder, and the agent saved the report to
 named as allowed. That run is why the request now says to use the shell tool.
 Unlike on Cursor, a headless run reaches the stop hook here.
 
+On Gemini CLI 0.62.0 on Windows 11, with a Gemini API key, a contributor ran
+the evals' activation phrases and off-topic questions through
+`evals/agents/gemini-cli.sh` on 2026-10-02: 84 runs, model
+gemini-3.5-flash-lite, headless and untrusted, without the setting that lets
+the agent act on its own. In that mode Gemini CLI did not register its skill
+tool, so every one of the 56 skill calls came back "tool not registered" and
+no skill's text reached the model. The numbers and what they mean are in the
+README, [On Gemini CLI](../README.md#on-gemini-cli).
+
 Not run: Gemini CLI on macOS or Linux, the project-level settings file, and
 Google sign-in.
 
 ## What differs between the tools
 
-- **Activation is measured on Claude Code and on Codex CLI.** On Codex CLI
-  0.157.1 the right skill was read in 75 of 75 runs, first in 70. The details
-  are in the README, [On Codex CLI](../README.md#on-codex-cli). On Cursor CLI
-  and Gemini CLI no figure is given, because none was measured. The only skill
-  seen switching on there is `os-done-or-not`, when the stop hook asked for
-  it. Runners for them are open issues:
-  [#40](https://github.com/kharmanskyi/open-steps/issues/40) Cursor,
-  [#38](https://github.com/kharmanskyi/open-steps/issues/38) Gemini CLI.
+- **Activation is measured on Claude Code, Codex CLI and Gemini CLI.** On
+  Codex CLI 0.157.1 the right skill was read in 75 of 75 runs, first in 70.
+  On Gemini CLI 0.62.0 the right skill was called in 54 of 75 runs, and the
+  other 21 reached for it by reading its file; headless, Gemini did not load
+  any skill. The details are in the README, [On Codex CLI](../README.md#on-codex-cli)
+  and [On Gemini CLI](../README.md#on-gemini-cli). On Cursor CLI no figure is
+  given, because none was measured; the only skill seen switching on there is
+  `os-done-or-not`, when the stop hook asked for it. Its runner is an open
+  issue: [#40](https://github.com/kharmanskyi/open-steps/issues/40).
 - **Codex may shorten the descriptions.** Per Codex's skills documentation
   (https://developers.openai.com/codex/skills/, read 2026-09-27), the list of
   skills gets at most 2% of the context window, or 8,000 characters when the

@@ -15,8 +15,9 @@ scripts in between, and a check that keeps the scripts honest.
 - **[`results.md`](results.md) is what came back.** Every skill and every
   phrase, one model next to another. The scorer writes this file and nobody
   types it, which is how you can check the numbers in the main README.
-  [`results-codex.md`](results-codex.md) is the same for one day of Codex
-  CLI, activation and off-topic phrases only.
+  [`results-codex.md`](results-codex.md) and
+  [`results-gemini-cli.md`](results-gemini-cli.md) are the same for one day
+  each of Codex CLI and Gemini CLI, activation and off-topic phrases only.
 - **`run.sh` does the asking.** It asks each phrase three times, on a machine
   where the pack is properly installed, and writes down which skill switched
   on. Then it hands the messy report to the agent twice: once as normal, once
@@ -200,16 +201,21 @@ own. A clean-room number would be lower and less useful, and a clean room is
 not available anyway: the reasons are in the traps at the bottom.
 
 That is the Claude Code machine. The Codex CLI numbers come from one
-contributor's runs on Linux (Codex CLI 0.157.1, 2026-09-28), which the
-maintainer scored from the transcripts and did not re-run. On both tools a
-phrase counts as a hit when the right skill was among those opened; on Codex
-it was also the first one opened in 70 of the 75 runs. Only the activation and
-off-topic phrases ran there, so that day's page, `results-codex.md`, says "Not
-run." for the quality and premortem parts. It is written with
-`python3 evals/score.py --print <that day> > evals/results-codex.md`, never by
-pointing the scorer at a folder that also holds Claude days: there it takes
-activation from the newest day, and a Codex day would replace the Claude
-numbers.
+contributor's runs on Linux (Codex CLI 0.157.1, 2026-09-28) and the Gemini
+CLI numbers from another contributor's runs on Windows 11 (Gemini CLI 0.62.0,
+2026-10-02); the maintainer scored both from the transcripts and did not
+re-run them. On every tool a phrase counts as a hit when the right skill was
+among those opened, as that tool's runner defines opening: on Codex a read of
+the skill's file, first in 70 of the 75 runs; on Gemini CLI a call of its
+skill tool, which headless came back "tool not registered" every time, so a
+hit there is the choice and not a loaded skill. Only the activation and
+off-topic phrases ran on those two, so their pages, `results-codex.md` and
+`results-gemini-cli.md`, say "Not run." for the quality and premortem parts.
+Each is written with
+`python3 evals/score.py --print <that day> > evals/results-<agent>.md`, never
+by pointing the scorer at a folder that also holds Claude days: there it takes
+activation from the newest day, and another tool's day would replace the
+Claude numbers.
 
 The quality table at the end of `results.md` needs two warnings. First, on
 days measured before 2026-09-12 the `with` arm never had the pack loaded: every
